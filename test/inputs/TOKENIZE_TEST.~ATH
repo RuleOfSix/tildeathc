@@ -1,0 +1,7 @@
+import library NUMBERS;
+import abstract LAMB;
+
+~ATH(LAMB) {
+	LAMB.DIE();
+} EXECUTE (PRINT "HELLO WORLD!";);
+THIS.DIE();
