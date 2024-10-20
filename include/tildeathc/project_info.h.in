@@ -1,0 +1,1 @@
+#define TEST_INPUT_DIR "@PROJECT_SOURCE_DIR@/test/inputs"
