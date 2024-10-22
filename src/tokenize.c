@@ -4,8 +4,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
-#include "tokenize.h"
-#include "nullcheck.h"
+#include <assert.h>
+#include <tokenize.h>
+#include <nullcheck.h>
 
 #define NUM_TOKENS 15
 
@@ -75,6 +76,10 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 		int16_t i = 0;
 		char* q;
 		for (q = *instr; !isspace(*q) && (strchr(".\";(){}[]", *q) == NULL); q++) {
+			if (!isprint(*q)) {
+				fprintf(stderr, "Input stream contains malformed character data. Terminating.\n");
+				exit(EXIT_FAILURE);
+			}
 			if (*q == '\0')	{
 				goto failed_to_find;
 			}
