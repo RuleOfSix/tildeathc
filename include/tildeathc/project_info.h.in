@@ -1,1 +1,4 @@
+#ifndef TILDEATHC_PROJECT_INFO
+#define TILDEATHC_PROJECT_INFO
 #define TEST_INPUT_DIR "@PROJECT_SOURCE_DIR@/test/inputs"
+#endif
