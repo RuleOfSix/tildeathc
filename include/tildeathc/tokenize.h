@@ -1,5 +1,5 @@
-#ifndef TILDEATH_TOKENIZE_H
-#define TILDEATH_TOKENIZE_H
+#ifndef TILDEATHC_TOKENIZE_H
+#define TILDEATHC_TOKENIZE_H
 
 #include <stdio.h>
 #include <stdint.h>
