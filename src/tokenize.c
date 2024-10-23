@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
-#include <assert.h>
 #include <tokenize.h>
 #include <nullcheck.h>
 

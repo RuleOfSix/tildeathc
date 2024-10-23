@@ -4,6 +4,7 @@ project(tildeathc VERSION 0.1
 				  LANGUAGES C)
 
 set(CMAKE_C_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 configure_file("include/tildeathc/project_info.h.in" "${PROJECT_BINARY_DIR}/include/tildeathc/project_info.h")
 
