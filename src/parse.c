@@ -84,20 +84,33 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 	ast* this_node = &(parent->children[parent->num_children - 1]);
 	this_node->type = OPERATION_NODE;
 	this_node->val.op = LOOP_OP;
-	this_node->num_children = 0;
-	this_node->children = NULL;
+	this_node->num_children = 1;
+	this_node->children = malloc(sizeof(*(this_node->children)));
+	MALLOC_NULL_CHECK(this_node->children);
 
 	int64_t cur_token = start_token + 1;
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "(", tokens->tokens[cur_token].lineno);
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
-	ASSERT_VARNAME(tokens->tokens[cur_token].str, tokens->tokens[cur_token].lineno);
-	cur_token++;
-	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	{
+		ASSERT_VARNAME(tokens->tokens[cur_token].str, tokens->tokens[cur_token].lineno);
+		this_node->children[0].type = STRING_NODE;
+		int32_t varlen = strlen(tokens->tokens[cur_token].str);
+		this_node->children[0].val.str = malloc((varlen + 1) * sizeof(char));
+		MALLOC_NULL_CHECK(this_node->children[0].val.str);
+		memcpy(this_node->children[0].val.str, tokens->tokens[cur_token].str, varlen + 1);
+		this_node->children[0].num_children = 0;
+		this_node->children[0].children = NULL;
+		cur_token++;
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	}
+
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ")", tokens->tokens[cur_token].lineno);
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "{", tokens->tokens[cur_token].lineno);
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
@@ -110,6 +123,81 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	cur_token += execute(this_node, tokens, cur_token);
+
+	return cur_token - start_token;
+}
+
+int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token) {
+	ASSERT_NOT_NULL(parent);
+	parent->num_children++;
+	if (parent->num_children == 1) {
+		parent->children = malloc(sizeof(*(parent->children)) * parent->num_children);	
+	} else {
+		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
+	}
+	MALLOC_NULL_CHECK(parent->children);
+	ast* this_node = &(parent->children[parent->num_children - 1]);
+	this_node->type = OPERATION_NODE;
+	this_node->val.op = BIFURCATE_OP;
+	this_node->num_children = 3;
+	this_node->children = malloc(3 * sizeof(*(this_node->children)));
+
+	int64_t cur_token = start_token + 1;
+
+	{
+		ASSERT_VARNAME(tokens->tokens[cur_token].str, tokens->tokens[cur_token].lineno);
+		this_node->children[0].type = STRING_NODE;
+		int32_t varlen = strlen(tokens->tokens[cur_token].str);
+		this_node->children[0].val.str = malloc((varlen + 1) * sizeof(char));
+		MALLOC_NULL_CHECK(this_node->children[0].val.str);
+		memcpy(this_node->children[0].val.str, tokens->tokens[cur_token].str, varlen + 1);
+		this_node->children[0].num_children = 0;
+		this_node->children[0].children = NULL;
+		cur_token++;
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	}
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "[", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	
+	{
+		ASSERT_VARNAME(tokens->tokens[cur_token].str, tokens->tokens[cur_token].lineno);
+		this_node->children[1].type = STRING_NODE;
+		int32_t varlen = strlen(tokens->tokens[cur_token].str);
+		this_node->children[1].val.str = malloc((varlen + 1) * sizeof(char));
+		MALLOC_NULL_CHECK(this_node->children[1].val.str);
+		memcpy(this_node->children[1].val.str, tokens->tokens[cur_token].str, varlen + 1);
+		this_node->children[1].num_children = 0;
+		this_node->children[1].children = NULL;
+		cur_token++;
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	}
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ",", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	{
+		ASSERT_VARNAME(tokens->tokens[cur_token].str, tokens->tokens[cur_token].lineno);
+		this_node->children[2].type = STRING_NODE;
+		int32_t varlen = strlen(tokens->tokens[cur_token].str);
+		this_node->children[2].val.str = malloc((varlen + 1) * sizeof(char));
+		MALLOC_NULL_CHECK(this_node->children[2].val.str);
+		memcpy(this_node->children[2].val.str, tokens->tokens[cur_token].str, varlen + 1);
+		this_node->children[2].num_children = 0;
+		this_node->children[2].children = NULL;
+		cur_token++;
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	}
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "]", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	return cur_token - start_token;
 }

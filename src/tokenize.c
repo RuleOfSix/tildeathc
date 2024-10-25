@@ -63,7 +63,7 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 		MALLOC_NULL_CHECK(output);
 		output->str = malloc((token_length + 1) * sizeof(*output->str));
 		MALLOC_NULL_CHECK(output->str);
-		strcpy(output->str, token_array[i]);
+		memcpy(output->str, token_array[i], token_length + 1);
 
 		for (int16_t j = 0; j < token_length; j++) {
 			(*instr)++;
@@ -88,7 +88,7 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 		MALLOC_NULL_CHECK(output);
 		output->str = malloc((i + 1) * sizeof(*output->str));
 		MALLOC_NULL_CHECK(output->str);
-		strncpy(output->str, *instr, i);
+		memcpy(output->str, *instr, i);
 		output->str[i] = '\0';
 		*instr = q;
 	}
