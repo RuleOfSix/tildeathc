@@ -12,6 +12,13 @@ target_include_directories(tokenize_crash PRIVATE "${PROJECT_SOURCE_DIR}/include
 										 )
 target_link_libraries(tokenize_crash PRIVATE tokenize)
 
+add_executable(comment_test comment_test.c)
+target_include_directories(comment_test PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+										PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+										)
+target_link_libraries(comment_test PRIVATE tokenize)
+
 add_test(NAME TokenizeTest COMMAND tokenize_test)
 add_test(NAME TokenizeCrash COMMAND tokenize_crash)
 set_property(TEST TokenizeCrash PROPERTY WILL_FAIL true)
+add_test(NAME CommentTest COMMAND comment_test)

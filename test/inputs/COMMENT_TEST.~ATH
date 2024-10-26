@@ -1,0 +1,17 @@
+import abstract CANARY;
+import abstract LAMB;
+
+# The following are some simple ~ATH idioms.
+
+~ATH(LAMB) {  
+	LAMB.DIE();#This is an easy way to make something happen one time.
+	CANARY.DIE(); # And this is an easy to way to make an else statement.
+} EXECUTE(NULL);
+
+~ATH(CANARY)  { #This is the aforementioned "else" 
+	CANARY.DIE(); # We also don't need to loop here
+	CANA#oops
+} EXECUTE(NULL);
+
+# This must be at the end of every ~ATH program.
+THIS.DIE();
