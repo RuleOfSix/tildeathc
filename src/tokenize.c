@@ -82,11 +82,19 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 			if (*q == '\0')	{
 				goto failed_to_find;
 			}
+			if (*q == '#') {
+				while (*(++q) != '\0');
+				if (i == 0) {
+					goto failed_to_find;
+				} else {
+					break;
+				}
+			}
 			i++;
 		}
 		output = malloc(sizeof(*output));
 		MALLOC_NULL_CHECK(output);
-		output->str = malloc((i + 1) * sizeof(*output->str));
+		output->str = malloc((i + 1) * sizeof(*(output->str)));
 		MALLOC_NULL_CHECK(output->str);
 		memcpy(output->str, *instr, i);
 		output->str[i] = '\0';
