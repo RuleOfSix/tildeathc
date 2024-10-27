@@ -11,7 +11,7 @@
 #endif
 
 int32_t main(void) {
-	FILE* test_input = fopen(TEST_INPUT_DIR "/TOKENIZE_TEST.~ATH", "r");
+	FILE* test_input = fopen(TEST_INPUT_DIR "/COMMENT_TEST.~ATH", "r");
 	if (test_input == NULL) {
 		fprintf(stderr, "Test error: failed to open tokenize test input file. Terminating.\n");
 		exit(EXIT_FAILURE);
@@ -72,7 +72,7 @@ int32_t main(void) {
 		{";", 17}
 	};
 
-	token_list expected_outputs = { expected_tokens, 34 };
+	token_list expected_outputs = { expected_tokens, 51 };
 	token_list* received_output = tokenize(test_input);
 	fclose(test_input);
 	if (received_output == NULL) {
