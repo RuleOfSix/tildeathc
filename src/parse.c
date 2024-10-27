@@ -14,21 +14,14 @@ int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token);
 int64_t death(ast* parent, const token_list* tokens, int64_t start_token);
 int64_t import(ast* parent, const token_list* tokens, int64_t start_token);
 int64_t execute(ast* parent, const token_list* tokens, int64_t start_token);
+int64_t print(ast* parent, const token_list* tokens, int64_t start_token);
 int64_t variable(ast* parent, const token_list* tokens, int64_t start_token);
 bool is_valid_var(const char* str);
-
 
 // THE FOLLOWING MACROS EVALUATE ARGUMENTS MULTIPLE TIMES.
 #define ASSERT_TOKEN_MATCH(token, assertion, lineno) do { \
 	if (strcmp((token), (assertion)) != 0) { \
 		fprintf(stderr, "Syntax error on line %ld: expected '%s', got '%s' instead.\n", (lineno), (assertion), (token)); \
-		exit(EXIT_FAILURE); \
-	} \
-} while (0)
-
-#define ASSERT_VARNAME(str, lineno) do { \
-	if (!is_valid_var(str)) { \
-		fprintf(stderr, "Syntax error on line %ld: '%s' is an invalid variable name.\n", (lineno), (str)); \
 		exit(EXIT_FAILURE); \
 	} \
 } while (0)
@@ -93,6 +86,7 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 	MALLOC_NULL_CHECK(this_node->children);
 
 	int64_t cur_token = start_token + 1;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "(", tokens->tokens[cur_token].lineno);
 	cur_token++;
@@ -136,6 +130,7 @@ int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token) {
 	this_node->children = NULL;
 
 	int64_t cur_token = start_token + 1;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	cur_token += variable(this_node, tokens, cur_token);	
 
@@ -218,8 +213,73 @@ int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
 	return cur_token - start_token;
 }
 
+int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
+	ASSERT_NOT_NULL(parent);
+	parent->num_children++;
+	if (parent->num_children == 1) {
+		parent->children = malloc(sizeof(*(parent->children)) * parent->num_children);	
+	} else {
+		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
+	}
+	MALLOC_NULL_CHECK(parent->children);
+	ast* this_node = &(parent->children[parent->num_children - 1]);
+	this_node->type = OPERATION_NODE;
+	this_node->val.op = IMPORT_OP;
+	this_node->num_children = 1;
+	this_node->children = malloc(this_node->num_children * sizeof(*(this_node->children)));
+	MALLOC_NULL_CHECK(this_node->children);
+
+	int64_t cur_token = start_token + 1;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);	
+	
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "import", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	const char* valid_import_names[] = {"abstract", "universe", "input", "library"};
+	const int32_t num_import_names = 4;
+	bool is_valid_import = false;
+	for (int32_t i = 0; i < num_import_names; i++) {
+		if (strcmp(valid_import_names[i], tokens->tokens[cur_token].str) == 0) {
+			is_valid_import = true;
+			break;
+		}
+	}
+	if (!is_valid_import) {
+		fprintf(stderr, "Error: invalid import type '%s' at line %ld.\n", tokens->tokens[cur_token].str, tokens->tokens[cur_token].lineno);
+		exit(EXIT_FAILURE);
+	}
+	this_node->children[0].type = STRING_NODE;
+	int32_t implen = strlen(tokens->tokens[cur_token].str);
+	this_node->children[0].val.str = malloc((implen + 1) * sizeof(char));
+	MALLOC_NULL_CHECK(this_node->children[0].val.str);
+	memcpy(this_node->children[0].val.str, tokens->tokens[cur_token].str, implen + 1);
+	this_node->children[0].num_children = 0;
+	this_node->children[0].children = NULL;
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	cur_token += variable(this_node, tokens, cur_token);
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	
+	return cur_token - start_token;
+}
+
+int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
+	if (strcmp(tokens->tokens[start_token].str, "PRINT") == 0) {
+		return print(parent, tokens, start_token);
+	}
+	return grave(parent, tokens, start_token);
+}
+
 int64_t variable(ast* parent, const token_list* tokens, int64_t start_token) {
-	ASSERT_VARNAME(tokens->tokens[start_token].str, tokens->tokens[start_token].lineno);
+	if (!is_valid_var(tokens->tokens[start_token].str)) { 
+		fprintf(stderr, "Syntax error on line %ld: '%s' is an invalid variable name.\n", tokens->tokens[start_token].lineno, tokens->tokens[start_token].str);
+		exit(EXIT_FAILURE);
+	}
 
 	ASSERT_NOT_NULL(parent);
 	parent->num_children++;
