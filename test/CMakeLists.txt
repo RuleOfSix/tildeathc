@@ -18,7 +18,22 @@ target_include_directories(comment_test PRIVATE "${PROJECT_SOURCE_DIR}/include/t
 										)
 target_link_libraries(comment_test PRIVATE tokenize)
 
+add_executable(quote_test quote_test.c)
+target_include_directories(quote_test PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+									  PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+									  )
+target_link_libraries(quote_test PRIVATE tokenize)
+
+add_executable(quote_error quote_error.c)
+target_include_directories(quote_error PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+									   PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+									   )
+target_link_libraries(quote_error PRIVATE tokenize)
+
 add_test(NAME TokenizeTest COMMAND tokenize_test)
 add_test(NAME TokenizeCrash COMMAND tokenize_crash)
-set_property(TEST TokenizeCrash PROPERTY WILL_FAIL true)
+set_property(TEST TokenizeCrash PROPERTY PASS_REGULAR_EXPRESSION "malformed character data")
 add_test(NAME CommentTest COMMAND comment_test)
+add_test(NAME QuoteTest COMMAND quote_test)
+add_test(NAME QuoteError COMMAND quote_error)
+set_property(TEST QuoteError PROPERTY PASS_REGULAR_EXPRESSION "unterminated string on line 1")

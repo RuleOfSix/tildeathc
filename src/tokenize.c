@@ -7,13 +7,13 @@
 #include <tokenize.h>
 #include <nullcheck.h>
 
-#define NUM_TOKENS 15
+#define NUM_TOKENS 14
 
 token* get_next_token(char** instr, int64_t lineno, const char** token_array, int16_t num_tokens);
 bool is_whitespace(char* str);
 
 token_list* tokenize(FILE* stream) {
-	const char* tokens[] = {"~ATH", "EXECUTE", "bifurcate", ".DIE", "PRINT", "import", "(", ")", "[", "]", "{", "}", ";", ",", "\""};
+	const char* tokens[] = {"~ATH", "EXECUTE", "bifurcate", ".DIE", "PRINT", "import", "(", ")", "[", "]", "{", "}", ";", ","};
 
 	size_t size = 0;
 	char* line = NULL;
@@ -69,6 +69,29 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 			(*instr)++;
 		}
 		break;
+	}
+
+	if (output == NULL && **instr == '"') {
+		char* q;
+		int32_t i;
+		for (i = 0, q = *instr; *(++q) != '"'; i++) {
+			if (*q == '\n' || *q == '\0'){
+				fprintf(stderr, "Error: unterminated string on line %ld\n", lineno);
+				exit(EXIT_FAILURE);
+			}
+			if (!isprint(*q)) {
+				fprintf(stderr, "Input stream contains malformed character data. Terminating.\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+		q++;
+		output = malloc(sizeof(*output));
+		MALLOC_NULL_CHECK(output);
+		output->str = malloc((i + 1) * sizeof(*(output->str)));
+		MALLOC_NULL_CHECK(output->str);
+		memcpy(output->str, (*instr + 1), i);
+		output->str[i] = '\0';
+		*instr = q;
 	}
 
 	if (output == NULL) {
