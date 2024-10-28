@@ -55,15 +55,15 @@ int64_t grave(ast* parent, const token_list* tokens, int64_t start_token) {
 	int64_t cur_token = start_token;
 	if (strcmp(tokens->tokens[start_token].str, "~ATH") == 0) {
 		cur_token += loop(parent, tokens, start_token);
-		return cur_token;
+		return cur_token - start_token;
 	}
 	if (strcmp(tokens->tokens[start_token].str, "bifurcate") == 0) {
 		cur_token += bifurcate(parent, tokens, start_token);
-		return cur_token;
+		return cur_token - start_token;
 	}
 	if (strcmp(tokens->tokens[start_token].str, "import") == 0) {
 		cur_token += import(parent, tokens, start_token);
-		return cur_token;
+		return cur_token - start_token;
 	}
 	cur_token += death(parent, tokens, start_token);
 	return cur_token - start_token;
@@ -81,9 +81,8 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 	ast* this_node = &(parent->children[parent->num_children - 1]);
 	this_node->type = OPERATION_NODE;
 	this_node->val.op = LOOP_OP;
-	this_node->num_children = 1;
-	this_node->children = malloc(sizeof(*(this_node->children)));
-	MALLOC_NULL_CHECK(this_node->children);
+	this_node->num_children = 0;
+	this_node->children = NULL;
 
 	int64_t cur_token = start_token + 1;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
@@ -104,7 +103,6 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	while(strcmp(tokens->tokens[cur_token].str, "}") != 0) {
 		cur_token += grave(this_node, tokens, cur_token);
-		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 	}
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
@@ -231,10 +229,6 @@ int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	int64_t cur_token = start_token + 1;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);	
-	
-	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "import", tokens->tokens[cur_token].lineno);
-	cur_token++;
-	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	const char* valid_import_names[] = {"abstract", "universe", "input", "library"};
 	const int32_t num_import_names = 4;
@@ -269,10 +263,73 @@ int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
 }
 
 int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
-	if (strcmp(tokens->tokens[start_token].str, "PRINT") == 0) {
-		return print(parent, tokens, start_token);
+	int64_t cur_token = start_token;
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "EXECUTE", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "(", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	if (strcmp(tokens->tokens[cur_token].str, "PRINT") == 0) {
+		cur_token += print(parent, tokens, cur_token);
+	} else {
+		cur_token += grave(parent, tokens, cur_token);
 	}
-	return grave(parent, tokens, start_token);
+	
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ")", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	return cur_token - start_token;
+}
+
+int64_t print(ast* parent, const token_list* tokens, int64_t start_token) {
+	ASSERT_NOT_NULL(parent);
+	parent->num_children++;
+	if (parent->num_children == 1) {
+		parent->children = malloc(sizeof(*(parent->children)) * parent->num_children);	
+	} else {
+		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
+	}
+	MALLOC_NULL_CHECK(parent->children);
+	ast* this_node = &(parent->children[parent->num_children - 1]);
+	this_node->type = OPERATION_NODE;
+	this_node->val.op = PRINT_OP;
+	this_node->num_children = 1;
+	this_node->children = malloc(sizeof(*(this_node->children)));
+	MALLOC_NULL_CHECK(this_node->children);
+
+	int64_t cur_token = start_token + 1;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	
+	if (tokens->tokens[cur_token].str[0] != '"') {
+		fprintf(stderr, "Error: PRINT statement on line %ld not followed by a string.\n", tokens->tokens[cur_token].lineno);
+		exit(EXIT_FAILURE);
+	}
+
+	this_node->children[0].type = STRING_NODE;
+	int32_t printlen = strlen(tokens->tokens[cur_token].str) - 2;
+	this_node->children[0].val.str = malloc((printlen + 1) * sizeof(char));
+	MALLOC_NULL_CHECK(this_node->children[0].val.str);
+	memcpy(this_node->children[0].val.str, tokens->tokens[cur_token].str + 1, printlen);
+	this_node->children[0].val.str[printlen] = '\0';
+	this_node->children[0].num_children = 0;
+	this_node->children[0].children = NULL;
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
+	cur_token++;
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+
+	return cur_token - start_token;
 }
 
 int64_t variable(ast* parent, const token_list* tokens, int64_t start_token) {
@@ -300,7 +357,7 @@ int64_t variable(ast* parent, const token_list* tokens, int64_t start_token) {
 	memcpy(this_node->val.str, tokens->tokens[start_token].str, varlen + 1);
 
 	ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
-	return start_token + 1;
+	return 1;
 }
 
 bool is_valid_var(const char* str) {

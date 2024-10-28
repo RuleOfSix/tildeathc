@@ -19,15 +19,15 @@ int32_t main(void) {
 	bool passed = true;
 
 	token expected_tokens[] = {
-		{"This should all be a single token.", 1},
+		{"\"This should all be a single token.\"", 1},
 		{"~ATH", 1},
 		{"(", 1},
 		{"}", 1},
 		{"PRINT", 1},
-		{"Even with multiple on one line", 1},
-		{"Or with the #comment marker inside.", 2},
+		{"\"Even with multiple on one line\"", 1},
+		{"\"Or with the #comment marker inside.\"", 2},
 		{"~ATH", 3},
-		{"this too", 3},
+		{"\"this too\"", 3},
 		{"EXECUTE", 3}
 	};
 
