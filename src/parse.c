@@ -388,6 +388,9 @@ bool is_valid_var(const char* str) {
 	if (strcmp("THIS", str) == 0) {
 		return false;
 	}
+	if (strcmp("NULL", str) == 0) {
+		return false;
+	}
 	return true;
 }
 
