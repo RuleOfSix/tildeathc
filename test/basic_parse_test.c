@@ -71,6 +71,8 @@ int32_t main() {
 		exit(EXIT_FAILURE);
 	}
 	printf("Basic parse module test passed\n");
+	free_ast(output);
+	free(output);
 	return 0;
 }
 
