@@ -42,6 +42,12 @@ target_include_directories(syntax_error PRIVATE "${PROJECT_SOURCE_DIR}/include/t
 										)
 target_link_libraries(syntax_error PRIVATE parse)
 
+add_executable(invalid_varname invalid_varname.c) 
+target_include_directories(invalid_varname PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+										   PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+										   )
+target_link_libraries(invalid_varname PRIVATE parse)
+
 add_test(NAME TokenizeTest COMMAND tokenize_test)
 add_test(NAME TokenizeCrash COMMAND tokenize_crash)
 set_property(TEST TokenizeCrash PROPERTY PASS_REGULAR_EXPRESSION "malformed character data")
@@ -52,3 +58,5 @@ set_property(TEST QuoteError PROPERTY PASS_REGULAR_EXPRESSION "unterminated stri
 add_test(NAME BasicParseTest COMMAND basic_parse_test)
 add_test(NAME SyntaxError COMMAND syntax_error)
 set_property(TEST SyntaxError PROPERTY PASS_REGULAR_EXPRESSION "Syntax error on line 1: expected '\\(', got '\\{' instead")
+add_test(NAME InvalidVarname COMMAND invalid_varname)
+set_property(TEST InvalidVarname PROPERTY PASS_REGULAR_EXPRESSION "Syntax error on line 1: 'NULL' is an invalid variable name")
