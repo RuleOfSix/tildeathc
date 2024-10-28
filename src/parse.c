@@ -436,8 +436,8 @@ void free_ast(ast *tree) {
 			free_ast(&(tree->children[i]));
 		}
 	}
+	free(tree->children);
 	if (tree->type == STRING_NODE) {
 		free(tree->val.str);
 	}
-	free(tree);
 }
