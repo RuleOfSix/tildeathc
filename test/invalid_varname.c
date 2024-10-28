@@ -22,7 +22,7 @@ int32_t main() {
 	};
 	token_list input = {input_tokens, 12};
 
-	ast* output = parse(&input);
+	parse(&input);
 	fprintf(stderr, "Test failed: parser did not throw a syntax error when given incorrect input.\n");
 	return 0;
 }
