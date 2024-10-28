@@ -191,6 +191,25 @@ int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
 		ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "]", tokens->tokens[cur_token].lineno);
 		cur_token++;
 		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	} else if (strcmp(tokens->tokens[cur_token].str, "THIS") == 0) {
+		this_node->num_children++;
+		if (this_node->num_children == 1) {
+			this_node->children = malloc(sizeof(*(this_node->children)) * this_node->num_children);	
+		} else {
+			this_node->children = realloc(this_node->children, sizeof(*(this_node->children)) * this_node->num_children);
+		}
+		MALLOC_NULL_CHECK(this_node->children);
+		ast* child_node = &(this_node->children[this_node->num_children - 1]);
+		child_node->type = STRING_NODE;
+		const int16_t thislen = 5;
+		child_node->val.str = malloc(thislen * sizeof(char));
+		MALLOC_NULL_CHECK(child_node->val.str);
+		memcpy(child_node->val.str, "THIS", thislen);
+		child_node->num_children = 0;
+		child_node->children = NULL;
+		child_node->lineno = tokens->tokens[cur_token].lineno;
+		cur_token++;
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 	} else {
 		cur_token += variable(this_node, tokens, cur_token);
 	}
@@ -282,7 +301,24 @@ int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	if (strcmp(tokens->tokens[cur_token].str, "PRINT") == 0) {
 		cur_token += print(parent, tokens, cur_token);
-	} else {
+	} else if (strcmp(tokens->tokens[cur_token].str, "NULL") == 0) {
+		ASSERT_NOT_NULL(parent);
+		parent->num_children++;
+		if (parent->num_children == 1) {
+			parent->children = malloc(sizeof(*(parent->children)) * parent->num_children);	
+		} else {
+			parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
+		}
+		MALLOC_NULL_CHECK(parent->children);
+		ast* this_node = &(parent->children[parent->num_children - 1]);
+		this_node->type = OPERATION_NODE;
+		this_node->val.op = NULL_OP;
+		this_node->num_children = 0;
+		this_node->children = NULL;
+		this_node->lineno = tokens->tokens[cur_token].lineno;
+		cur_token++;
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
+	} else{
 		cur_token += grave(parent, tokens, cur_token);
 	}
 	
@@ -374,11 +410,6 @@ bool is_valid_var(const char* str) {
 	if (*str == '\0') {
 		return false;
 	}
-	do {
-		if (!(isupper(*str) || isdigit(*str) || *str == '_')) {
-			return false;
-		}
-	} while (*(++str) != '\0');
 	if (strcmp("EXECUTE", str) == 0) {
 		return false;
 	}
@@ -391,6 +422,11 @@ bool is_valid_var(const char* str) {
 	if (strcmp("NULL", str) == 0) {
 		return false;
 	}
+	do {
+		if (!(isupper(*str) || isdigit(*str) || *str == '_')) {
+			return false;
+		}
+	} while (*(++str) != '\0');
 	return true;
 }
 

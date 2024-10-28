@@ -10,6 +10,7 @@ typedef enum operation {
 	DIE_OP,
 	IMPORT_OP,
 	PRINT_OP,
+	NULL_OP,
 } operation;
 
 typedef enum node_type {
@@ -35,7 +36,8 @@ typedef struct ast {
 									(operation) == BIFURCATE_OP ? "BIFURCATE_OP" : (\
 									(operation) == DIE_OP ? "DIE_OP" : (\
 									(operation) == IMPORT_OP ? "IMPORT_OP" : (\
-									(operation) == PRINT_OP ? "PRINT_OP" : "NONE")))))
+									(operation) == PRINT_OP ? "PRINT_OP" : (\
+									(operation) == NULL_OP ? "NULL_OP" : "NONE"))))))
 
 #define LOOKUP_NODE_TYPE(node_type) ((node_type) == OPERATION_NODE ? "OPERATION_NODE" : (\
 									(node_type) == STRING_NODE ? "STRING_NODE" : (\
