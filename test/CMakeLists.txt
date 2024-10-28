@@ -1,62 +1,26 @@
 cmake_minimum_required(VERSION 3.22)
 
-add_executable(tokenize_test tokenize_test.c)
-target_include_directories(tokenize_test PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-										 PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-										 )
-target_link_libraries(tokenize_test PRIVATE tokenize)
+function(tildeathc_add_test args)
+	cmake_parse_arguments(PARSE_ARGV 0 TILDEATHC "" "TARGET_NAME;TEST_NAME;SOURCE_FILE;REGEX" "DEPENDENCIES")
+	add_executable( ${TILDEATHC_TARGET_NAME} ${TILDEATHC_SOURCE_FILE})
+	target_include_directories(${TILDEATHC_TARGET_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+											  PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+											  )
+	foreach(LIB IN LISTS TILDEATHC_DEPENDENCIES)
+		target_link_libraries(${TILDEATHC_TARGET_NAME} PRIVATE ${LIB})
+	endforeach()
 
-add_executable(tokenize_crash tokenize_crash.c)
-target_include_directories(tokenize_crash PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-										 PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-										 )
-target_link_libraries(tokenize_crash PRIVATE tokenize)
+	add_test(NAME ${TILDEATHC_TEST_NAME} COMMAND ${TILDEATHC_TARGET_NAME})
+	if (DEFINED TILDEATHC_REGEX)
+		set_property(TEST ${TILDEATHC_TEST_NAME} PROPERTY PASS_REGULAR_EXPRESSION ${TILDEATHC_REGEX})
+	endif()
+endfunction()
 
-add_executable(comment_test comment_test.c)
-target_include_directories(comment_test PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-										PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-										)
-target_link_libraries(comment_test PRIVATE tokenize)
-
-add_executable(quote_test quote_test.c)
-target_include_directories(quote_test PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-									  PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-									  )
-target_link_libraries(quote_test PRIVATE tokenize)
-
-add_executable(quote_error quote_error.c)
-target_include_directories(quote_error PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-									   PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-									   )
-target_link_libraries(quote_error PRIVATE tokenize)
-
-add_executable(basic_parse_test basic_parse_test.c) 
-target_include_directories(basic_parse_test PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-											PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-											)
-target_link_libraries(basic_parse_test PRIVATE parse)
-
-add_executable(syntax_error syntax_error.c) 
-target_include_directories(syntax_error PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-										PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-										)
-target_link_libraries(syntax_error PRIVATE parse)
-
-add_executable(invalid_varname invalid_varname.c) 
-target_include_directories(invalid_varname PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-										   PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-										   )
-target_link_libraries(invalid_varname PRIVATE parse)
-
-add_test(NAME TokenizeTest COMMAND tokenize_test)
-add_test(NAME TokenizeCrash COMMAND tokenize_crash)
-set_property(TEST TokenizeCrash PROPERTY PASS_REGULAR_EXPRESSION "malformed character data")
-add_test(NAME CommentTest COMMAND comment_test)
-add_test(NAME QuoteTest COMMAND quote_test)
-add_test(NAME QuoteError COMMAND quote_error)
-set_property(TEST QuoteError PROPERTY PASS_REGULAR_EXPRESSION "unterminated string on line 1")
-add_test(NAME BasicParseTest COMMAND basic_parse_test)
-add_test(NAME SyntaxError COMMAND syntax_error)
-set_property(TEST SyntaxError PROPERTY PASS_REGULAR_EXPRESSION "Syntax error on line 1: expected '\\(', got '\\{' instead")
-add_test(NAME InvalidVarname COMMAND invalid_varname)
-set_property(TEST InvalidVarname PROPERTY PASS_REGULAR_EXPRESSION "Syntax error on line 1: 'NULL' is an invalid variable name")
+tildeathc_add_test(TARGET_NAME tokenize_test TEST_NAME TokenizeTest SOURCE_FILE tokenize_test.c DEPENDENCIES tokenize)
+tildeathc_add_test(TARGET_NAME tokenize_crash TEST_NAME TokenizeCrash SOURCE_FILE tokenize_crash.c DEPENDENCIES tokenize REGEX "malformed character data")
+tildeathc_add_test(TARGET_NAME comment_test TEST_NAME CommentTest SOURCE_FILE comment_test.c DEPENDENCIES tokenize)
+tildeathc_add_test(TARGET_NAME quote_test TEST_NAME QuoteTest SOURCE_FILE quote_test.c DEPENDENCIES tokenize)
+tildeathc_add_test(TARGET_NAME quote_error TEST_NAME QuoteError SOURCE_FILE quote_error.c DEPENDENCIES tokenize REGEX "unterminated string on line 1")
+tildeathc_add_test(TARGET_NAME basic_parse_test TEST_NAME BasicParseTest SOURCE_FILE basic_parse_test.c DEPENDENCIES parse)
+tildeathc_add_test(TARGET_NAME syntax_error TEST_NAME SyntaxError SOURCE_FILE syntax_error.c DEPENDENCIES parse REGEX "Syntax error on line 1: expected '\\(', got '\\{' instead")
+tildeathc_add_test(TARGET_NAME invalid_varname TEST_NAME InvalidVarname SOURCE_FILE invalid_varname.c DEPENDENCIES parse REGEX "Syntax error on line 1: 'NULL' is an invalid variable name")
