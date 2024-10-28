@@ -74,7 +74,7 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 	if (output == NULL && **instr == '"') {
 		char* q;
 		int32_t i;
-		for (i = 0, q = *instr; *(++q) != '"'; i++) {
+		for (i = 1, q = *instr; *(++q) != '"'; i++) {
 			if (*q == '\n' || *q == '\0'){
 				fprintf(stderr, "Error: unterminated string on line %ld\n", lineno);
 				exit(EXIT_FAILURE);
@@ -84,12 +84,13 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 				exit(EXIT_FAILURE);
 			}
 		}
+		i++;
 		q++;
 		output = malloc(sizeof(*output));
 		MALLOC_NULL_CHECK(output);
 		output->str = malloc((i + 1) * sizeof(*(output->str)));
 		MALLOC_NULL_CHECK(output->str);
-		memcpy(output->str, (*instr + 1), i);
+		memcpy(output->str, *instr, i);
 		output->str[i] = '\0';
 		*instr = q;
 	}

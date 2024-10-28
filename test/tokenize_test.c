@@ -41,7 +41,7 @@ int32_t main(void) {
 		{"EXECUTE", 6},
 		{"(", 6},
 		{"PRINT", 6},
-		{"HELLO WORLD!", 6},
+		{"\"HELLO WORLD!\"", 6},
 		{";", 6},
 		{")", 6},
 		{";", 6},
