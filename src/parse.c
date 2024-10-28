@@ -379,6 +379,15 @@ bool is_valid_var(const char* str) {
 			return false;
 		}
 	} while (*(++str) != '\0');
+	if (strcmp("EXECUTE", str) == 0) {
+		return false;
+	}
+	if (strcmp("PRINT", str) == 0) {
+		return false;
+	}
+	if (strcmp("THIS", str) == 0) {
+		return false;
+	}
 	return true;
 }
 
