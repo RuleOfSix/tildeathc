@@ -10,7 +10,10 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release") 
-	add_compile_options("-O3")
+	add_compile_options(-O3)
+endif()
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 endif()
 
 configure_file("include/tildeathc/project_info.h.in" "${PROJECT_BINARY_DIR}/include/tildeathc/project_info.h")
