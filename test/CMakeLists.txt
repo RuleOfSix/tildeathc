@@ -36,6 +36,12 @@ target_include_directories(basic_parse_test PRIVATE "${PROJECT_SOURCE_DIR}/inclu
 											)
 target_link_libraries(basic_parse_test PRIVATE parse)
 
+add_executable(syntax_error syntax_error.c) 
+target_include_directories(syntax_error PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+										PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+										)
+target_link_libraries(syntax_error PRIVATE parse)
+
 add_test(NAME TokenizeTest COMMAND tokenize_test)
 add_test(NAME TokenizeCrash COMMAND tokenize_crash)
 set_property(TEST TokenizeCrash PROPERTY PASS_REGULAR_EXPRESSION "malformed character data")
@@ -44,3 +50,5 @@ add_test(NAME QuoteTest COMMAND quote_test)
 add_test(NAME QuoteError COMMAND quote_error)
 set_property(TEST QuoteError PROPERTY PASS_REGULAR_EXPRESSION "unterminated string on line 1")
 add_test(NAME BasicParseTest COMMAND basic_parse_test)
+add_test(NAME SyntaxError COMMAND syntax_error)
+set_property(TEST SyntaxError PROPERTY PASS_REGULAR_EXPRESSION "Syntax error on line 1: expected '\\(', got '\\{' instead")

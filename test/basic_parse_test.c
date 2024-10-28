@@ -6,10 +6,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#ifndef TEST_INPUT_DIR 
-#define TEST_INPUT_DIR "."
-#endif
-
 bool compare(ast* expected, ast* actual);
 
 int32_t main() {
