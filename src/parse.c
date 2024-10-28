@@ -39,6 +39,7 @@ ast* parse(const token_list* tokens) {
 	root->val.str = NULL;
 	root->num_children = 0;
 	root->children = NULL;
+	root->lineno = 0;
 	for (int64_t i = 0; i < tokens->length;) {
 		i += grave(root, tokens, i);
 	}
@@ -83,6 +84,7 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 	this_node->val.op = LOOP_OP;
 	this_node->num_children = 0;
 	this_node->children = NULL;
+	this_node->lineno = tokens->tokens[start_token].lineno;
 
 	int64_t cur_token = start_token + 1;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
@@ -126,6 +128,7 @@ int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token) {
 	this_node->val.op = BIFURCATE_OP;
 	this_node->num_children = 0;
 	this_node->children = NULL;
+	this_node->lineno = tokens->tokens[start_token].lineno;
 
 	int64_t cur_token = start_token + 1;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
@@ -191,8 +194,10 @@ int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
 	} else {
 		cur_token += variable(this_node, tokens, cur_token);
 	}
+
 	
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ".DIE", tokens->tokens[cur_token].lineno);
+	this_node->lineno = tokens->tokens[cur_token].lineno;
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
@@ -226,6 +231,7 @@ int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
 	this_node->num_children = 1;
 	this_node->children = malloc(this_node->num_children * sizeof(*(this_node->children)));
 	MALLOC_NULL_CHECK(this_node->children);
+	this_node->lineno = tokens->tokens[start_token].lineno;
 
 	int64_t cur_token = start_token + 1;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);	
@@ -250,6 +256,7 @@ int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
 	memcpy(this_node->children[0].val.str, tokens->tokens[cur_token].str, implen + 1);
 	this_node->children[0].num_children = 0;
 	this_node->children[0].children = NULL;
+	this_node->children[0].lineno = tokens->tokens[cur_token].lineno;
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
@@ -305,6 +312,7 @@ int64_t print(ast* parent, const token_list* tokens, int64_t start_token) {
 	this_node->num_children = 1;
 	this_node->children = malloc(sizeof(*(this_node->children)));
 	MALLOC_NULL_CHECK(this_node->children);
+	this_node->lineno = tokens->tokens[start_token].lineno;
 
 	int64_t cur_token = start_token + 1;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
@@ -322,6 +330,7 @@ int64_t print(ast* parent, const token_list* tokens, int64_t start_token) {
 	this_node->children[0].val.str[printlen] = '\0';
 	this_node->children[0].num_children = 0;
 	this_node->children[0].children = NULL;
+	this_node->children[0].lineno = tokens->tokens[cur_token].lineno;
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
@@ -350,6 +359,7 @@ int64_t variable(ast* parent, const token_list* tokens, int64_t start_token) {
 	this_node->type = STRING_NODE;
 	this_node->children = NULL;
 	this_node->num_children = 0;
+	this_node->lineno = tokens->tokens[start_token].lineno;
 
 	int32_t varlen = strlen(tokens->tokens[start_token].str);
 	this_node->val.str = malloc((varlen + 1) * sizeof(char));
