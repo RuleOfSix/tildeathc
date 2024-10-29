@@ -27,8 +27,9 @@ bool is_valid_var(const char* str);
 } while (0)
 
 #define ASSERT_TOKEN_IN_BOUNDS(cur_token, token_list) do { \
-	if (cur_token > token_list->length) { \
+	if (cur_token >= token_list->length) { \
 		fprintf(stderr, "Error: unexpectedly encountered end of file. Do you have an incomplete statement?\n"); \
+		exit(EXIT_FAILURE); \
 	} \
 } while (0)
 
@@ -53,21 +54,16 @@ ast* parse(const token_list* tokens) {
 }
 
 int64_t grave(ast* parent, const token_list* tokens, int64_t start_token) {
-	int64_t cur_token = start_token;
 	if (strcmp(tokens->tokens[start_token].str, "~ATH") == 0) {
-		cur_token += loop(parent, tokens, start_token);
-		return cur_token - start_token;
+		return loop(parent, tokens, start_token);
 	}
 	if (strcmp(tokens->tokens[start_token].str, "bifurcate") == 0) {
-		cur_token += bifurcate(parent, tokens, start_token);
-		return cur_token - start_token;
+		return bifurcate(parent, tokens, start_token);
 	}
 	if (strcmp(tokens->tokens[start_token].str, "import") == 0) {
-		cur_token += import(parent, tokens, start_token);
-		return cur_token - start_token;
+		return import(parent, tokens, start_token);
 	}
-	cur_token += death(parent, tokens, start_token);
-	return cur_token - start_token;
+	return death(parent, tokens, start_token);
 }
 
 int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
@@ -105,6 +101,7 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	while(strcmp(tokens->tokens[cur_token].str, "}") != 0) {
 		cur_token += grave(this_node, tokens, cur_token);
+		ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
 	}
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
@@ -134,18 +131,21 @@ int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token) {
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	cur_token += variable(this_node, tokens, cur_token);	
+	ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "[", tokens->tokens[cur_token].lineno);
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 	
 	cur_token += variable(this_node, tokens, cur_token);	
+	ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ",", tokens->tokens[cur_token].lineno);
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	cur_token += variable(this_node, tokens, cur_token);	
+	ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "]", tokens->tokens[cur_token].lineno);
 	cur_token++;
@@ -153,7 +153,6 @@ int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
 	cur_token++;
-	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	return cur_token - start_token;
 }
@@ -180,6 +179,7 @@ int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
 		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 		cur_token += variable(this_node, tokens, cur_token);
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 		while (strcmp(tokens->tokens[cur_token].str, ",") == 0) {
 			cur_token++;
@@ -230,7 +230,6 @@ int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
 	cur_token++;
-	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	return cur_token - start_token;
 }
@@ -280,10 +279,10 @@ int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	cur_token += variable(this_node, tokens, cur_token);
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
 	cur_token++;
-	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 	
 	return cur_token - start_token;
 }
@@ -301,6 +300,7 @@ int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	if (strcmp(tokens->tokens[cur_token].str, "PRINT") == 0) {
 		cur_token += print(parent, tokens, cur_token);
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 	} else if (strcmp(tokens->tokens[cur_token].str, "NULL") == 0) {
 		ASSERT_NOT_NULL(parent);
 		parent->num_children++;
@@ -320,6 +320,7 @@ int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
 		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 	} else{
 		cur_token += grave(parent, tokens, cur_token);
+		ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 	}
 	
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ")", tokens->tokens[cur_token].lineno);
@@ -328,7 +329,6 @@ int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
 	cur_token++;
-	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	return cur_token - start_token;
 }
@@ -372,7 +372,6 @@ int64_t print(ast* parent, const token_list* tokens, int64_t start_token) {
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
 	cur_token++;
-	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	return cur_token - start_token;
 }
@@ -402,7 +401,6 @@ int64_t variable(ast* parent, const token_list* tokens, int64_t start_token) {
 	MALLOC_NULL_CHECK(this_node->val.str);
 	memcpy(this_node->val.str, tokens->tokens[start_token].str, varlen + 1);
 
-	ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
 	return 1;
 }
 
