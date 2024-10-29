@@ -18,7 +18,7 @@ int32_t main(void) {
 	}
 	bool passed = true;
 
-	token expected_tokens[] = {
+	struct token expected_tokens[] = {
 		{"\"This should all be a single token.\"", 1},
 		{"~ATH", 1},
 		{"(", 1},
@@ -31,8 +31,8 @@ int32_t main(void) {
 		{"EXECUTE", 3}
 	};
 
-	token_list expected_outputs = { expected_tokens, 10 };
-	token_list* received_output = tokenize(test_input);
+	struct token_list expected_outputs = { expected_tokens, 10 };
+	struct token_list* received_output = tokenize(test_input);
 	fclose(test_input);
 	if (received_output == NULL) {
 		fprintf(stderr, "Test error: tokenizer output null. Terminating.\n");

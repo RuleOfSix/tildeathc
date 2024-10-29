@@ -1,3 +1,4 @@
+#include <tokenize.h>
 #include <parse.h>
 #include <project_info.h>
 #include <stdlib.h>
@@ -6,10 +7,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-bool compare(ast* expected, ast* actual);
+bool compare(struct ast* expected, struct ast* actual);
 
 int32_t main() {
-	token input_tokens[] = {
+	struct token input_tokens[] = {
 		{"~ATH", 1},
 		{"(", 1},
 		{"LAMB", 1},
@@ -27,16 +28,16 @@ int32_t main() {
 		{")", 2},
 		{";", 2}
 	};
-	token_list input = {input_tokens, 16};
+	struct token_list input = {input_tokens, 16};
 
-	ast loop_c[] = {{.type=STRING_NODE, .val.str="LAMB", .lineno=1, .num_children=0, .children=NULL},
+	struct ast loop_c[] = {{.type=STRING_NODE, .val.str="LAMB", .lineno=1, .num_children=0, .children=NULL},
 						  {.type=OPERATION_NODE, .val.op=NULL_OP, .lineno=1, .num_children=0, .children=NULL}};
-	ast death_c[] = {{.type=STRING_NODE, .val.str="THIS", .lineno=2, .num_children=0, .children=NULL}};
-	ast root_c[] = {{.type=OPERATION_NODE, .val.op=LOOP_OP, .lineno=1, .num_children=2, .children=loop_c},
+	struct ast death_c[] = {{.type=STRING_NODE, .val.str="THIS", .lineno=2, .num_children=0, .children=NULL}};
+	struct ast root_c[] = {{.type=OPERATION_NODE, .val.op=LOOP_OP, .lineno=1, .num_children=2, .children=loop_c},
 						{.type=OPERATION_NODE, .val.op=DIE_OP, .lineno=2, .num_children=1, .children=death_c}};
-	ast expected_output = {.type=ROOT_NODE, .val.str=NULL, .lineno=0, .num_children=2, .children=root_c};
+	struct ast expected_output = {.type=ROOT_NODE, .val.str=NULL, .lineno=0, .num_children=2, .children=root_c};
 
-	ast* output = parse(&input);
+	struct ast* output = parse(&input);
 	if (output == NULL) {
 		fprintf(stderr, "Test failed: parse output null.\n");
 		exit(EXIT_FAILURE);
@@ -51,7 +52,7 @@ int32_t main() {
 	return 0;
 }
 
-bool compare(ast* expected, ast* actual) {
+bool compare(struct ast* expected, struct ast* actual) {
 	if (expected->type != actual->type) {
 		fprintf(stderr, "Expected node type of %s, got %s on line %ld.\n", LOOKUP_NODE_TYPE(expected->type), LOOKUP_NODE_TYPE(actual->type), actual->lineno);
 		return false;

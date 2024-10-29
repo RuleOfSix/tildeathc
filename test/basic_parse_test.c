@@ -1,3 +1,4 @@
+#include <tokenize.h>
 #include <parse.h>
 #include <project_info.h>
 #include <stdlib.h>
@@ -6,10 +7,10 @@
 #include <stdbool.h>
 #include <string.h>
 
-bool compare(ast* expected, ast* actual);
+bool compare(struct ast* expected, struct ast* actual);
 
 int32_t main() {
-	token input_tokens[] = {
+	struct token input_tokens[] = {
 		{"import", 1},
 		{"library", 1},
 		{"NUMBERS", 1},
@@ -42,26 +43,26 @@ int32_t main() {
 		{")", 7},
 		{";", 7}
 	};
-	token_list input = {input_tokens, 31};
+	struct token_list input = {input_tokens, 31};
 
-	ast grave_1_c[] = {{.type=STRING_NODE, .val.str="library", .lineno=1, .num_children=0, .children=NULL},
+	struct ast grave_1_c[] = {{.type=STRING_NODE, .val.str="library", .lineno=1, .num_children=0, .children=NULL},
 					   {.type=STRING_NODE, .val.str="NUMBERS", .lineno=1, .num_children=0, .children=NULL}};
-	ast grave_1 = {.type=OPERATION_NODE, .val.op=IMPORT_OP, .lineno=1, .num_children=2, .children=grave_1_c};
-	ast grave_2_c[] = {{.type=STRING_NODE, .val.str="abstract", .lineno=2, .num_children=0, .children=NULL},
+	struct ast grave_1 = {.type=OPERATION_NODE, .val.op=IMPORT_OP, .lineno=1, .num_children=2, .children=grave_1_c};
+	struct ast grave_2_c[] = {{.type=STRING_NODE, .val.str="abstract", .lineno=2, .num_children=0, .children=NULL},
 					   {.type=STRING_NODE, .val.str="LAMB", .lineno=2, .num_children=0, .children=NULL}};
-	ast grave_2 = {.type=OPERATION_NODE, .val.op=IMPORT_OP, .lineno=2, .num_children=2, .children=grave_2_c};
-	ast grave_3_c_2_c[] = {{.type=STRING_NODE, .val.str="LAMB", .lineno=5, .num_children=0, .children=NULL}};
-	ast grave_3_c_3_c[] = {{.type=STRING_NODE, .val.str="HELLO WORLD!", .lineno=6, .num_children=0, .children=NULL}};
-	ast grave_3_c[] = {{.type=STRING_NODE, .val.str="LAMB", .lineno=4, .num_children=0, .children=NULL},
+	struct ast grave_2 = {.type=OPERATION_NODE, .val.op=IMPORT_OP, .lineno=2, .num_children=2, .children=grave_2_c};
+	struct ast grave_3_c_2_c[] = {{.type=STRING_NODE, .val.str="LAMB", .lineno=5, .num_children=0, .children=NULL}};
+	struct ast grave_3_c_3_c[] = {{.type=STRING_NODE, .val.str="HELLO WORLD!", .lineno=6, .num_children=0, .children=NULL}};
+	struct ast grave_3_c[] = {{.type=STRING_NODE, .val.str="LAMB", .lineno=4, .num_children=0, .children=NULL},
 					 {.type=OPERATION_NODE, .val.op=DIE_OP, .lineno=5, .num_children=1, .children=grave_3_c_2_c},
 					 {.type=OPERATION_NODE, .val.op=PRINT_OP, .lineno=6, .num_children=1, .children=grave_3_c_3_c}};
-	ast grave_3 = {.type=OPERATION_NODE, .val.op=LOOP_OP, .lineno=4, .num_children=3, .children=grave_3_c};
-	ast grave_4_c[] = {{.type=STRING_NODE, .val.str="THIS", .lineno=7, .num_children=0, .children=NULL}};
-	ast grave_4 = {.type=OPERATION_NODE, .val.op=DIE_OP, .lineno=7, .num_children=1, .children=grave_4_c};
-	ast root_c[] = {grave_1, grave_2, grave_3, grave_4};
-	ast expected_output = {.type=ROOT_NODE, .val.str=NULL, .lineno=0, .num_children=4, .children=root_c};
+	struct ast grave_3 = {.type=OPERATION_NODE, .val.op=LOOP_OP, .lineno=4, .num_children=3, .children=grave_3_c};
+	struct ast grave_4_c[] = {{.type=STRING_NODE, .val.str="THIS", .lineno=7, .num_children=0, .children=NULL}};
+	struct ast grave_4 = {.type=OPERATION_NODE, .val.op=DIE_OP, .lineno=7, .num_children=1, .children=grave_4_c};
+	struct ast root_c[] = {grave_1, grave_2, grave_3, grave_4};
+	struct ast expected_output = {.type=ROOT_NODE, .val.str=NULL, .lineno=0, .num_children=4, .children=root_c};
 
-	ast* output = parse(&input);
+	struct ast* output = parse(&input);
 	if (output == NULL) {
 		fprintf(stderr, "Test failed: parse output null.\n");
 		exit(EXIT_FAILURE);
@@ -76,7 +77,7 @@ int32_t main() {
 	return 0;
 }
 
-bool compare(ast* expected, ast* actual) {
+bool compare(struct ast* expected, struct ast* actual) {
 	if (expected->type != actual->type) {
 		fprintf(stderr, "Expected node type of %s, got %s on line %ld.\n", LOOKUP_NODE_TYPE(expected->type), LOOKUP_NODE_TYPE(actual->type), actual->lineno);
 		return false;

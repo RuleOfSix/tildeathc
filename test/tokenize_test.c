@@ -18,7 +18,7 @@ int32_t main(void) {
 	}
 	bool passed = true;
 
-	token expected_tokens[] = {
+	struct token expected_tokens[] = {
         {"import", 1},
 		{"library", 1},
 		{"NUMBERS", 1},
@@ -52,8 +52,8 @@ int32_t main(void) {
 		{";", 7}
 	};
 
-	token_list expected_outputs = { expected_tokens, 31 };
-	token_list* received_output = tokenize(test_input);
+	struct token_list expected_outputs = { expected_tokens, 31 };
+	struct token_list* received_output = tokenize(test_input);
 	fclose(test_input);
 	if (received_output == NULL) {
 		fprintf(stderr, "Test error: tokenizer output null. Terminating.\n");
