@@ -98,7 +98,7 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 	if (output == NULL) {
 		int16_t i = 0;
 		char* q;
-		for (q = *instr; !isspace(*q) && (strchr(".\";(){}[]", *q) == NULL); q++) {
+		for (q = *instr; !isspace(*q) && (strchr(",.\";(){}[]", *q) == NULL); q++) {
 			if (!isprint(*q)) {
 				fprintf(stderr, "Input stream contains malformed character data. Terminating.\n");
 				exit(EXIT_FAILURE);

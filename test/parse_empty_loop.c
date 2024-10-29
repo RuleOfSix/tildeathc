@@ -45,7 +45,7 @@ int32_t main() {
 		fprintf(stderr, "Test failed: parse output does not match expected AST.\n");
 		exit(EXIT_FAILURE);
 	}
-	printf("Basic parse module test passed\n");
+	printf("Parse module empty loop test passed\n");
 	free_ast(output);
 	free(output);
 	return 0;
