@@ -9,24 +9,24 @@
 
 #define NUM_TOKENS 14
 
-token* get_next_token(char** instr, int64_t lineno, const char** token_array, int16_t num_tokens);
+struct token* get_next_token(char** instr, int64_t lineno, const char** token_array, int16_t num_tokens);
 bool is_whitespace(char* str);
 
-token_list* tokenize(FILE* stream) {
+struct token_list* tokenize(FILE* stream) {
 	const char* tokens[] = {"~ATH", "EXECUTE", "bifurcate", ".DIE", "PRINT", "import", "(", ")", "[", "]", "{", "}", ";", ","};
 
 	size_t size = 0;
 	char* line = NULL;
 
 	int32_t n = 50;
-	token_list* output = malloc(sizeof(*output));
+	struct token_list* output = malloc(sizeof(*output));
 	MALLOC_NULL_CHECK(output);
 	output->tokens = malloc(n * sizeof(*output->tokens));
 	MALLOC_NULL_CHECK(output->tokens);
 	output->length = 0;
 	
 	for (int64_t lineno = 1; getline(&line, &size, stream) > 0; lineno++) {
-		token* next_token;
+		struct token* next_token;
 		char* p = line;
 		while((next_token = get_next_token(&p, lineno, tokens, NUM_TOKENS)) != NULL)	{
 			output->length++;
@@ -43,8 +43,8 @@ token_list* tokenize(FILE* stream) {
 	return output;
 }
 
-token* get_next_token(char** instr, int64_t lineno, const char** const token_array, int16_t num_tokens) {
-	token* output = NULL;
+struct token* get_next_token(char** instr, int64_t lineno, const char** const token_array, int16_t num_tokens) {
+	struct token* output = NULL;
 
 	if (is_whitespace(*instr)) {
 		goto failed_to_find;
@@ -133,7 +133,7 @@ token* get_next_token(char** instr, int64_t lineno, const char** const token_arr
 	return output;
 }
 
-void free_token_list(token_list* tl) {
+void free_token_list(struct token_list* tl) {
 	for (int64_t i = 0; i < tl->length; i++) {
 		free(tl->tokens[i].str);
 	}

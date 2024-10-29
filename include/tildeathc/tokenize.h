@@ -4,17 +4,17 @@
 #include <stdio.h>
 #include <stdint.h>
 
-typedef struct token {
+struct token {
 	char* str;
 	int64_t lineno;
-} token;
+};
 
-typedef struct token_list {
-	token* tokens;
+struct token_list {
+	struct token* tokens;
 	int64_t length;
-} token_list;
+};
 
-token_list* tokenize(FILE* stream);
-void free_token_list(token_list* tl);
+struct token_list* tokenize(FILE* stream);
+void free_token_list(struct token_list* tl);
 
 #endif

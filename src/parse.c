@@ -8,14 +8,14 @@
 #include <string.h>
 #include <ctype.h>
 
-int64_t grave(ast* parent, const token_list* tokens, int64_t start_token);
-int64_t loop(ast* parent, const token_list* tokens, int64_t start_token);
-int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token);
-int64_t death(ast* parent, const token_list* tokens, int64_t start_token);
-int64_t import(ast* parent, const token_list* tokens, int64_t start_token);
-int64_t execute(ast* parent, const token_list* tokens, int64_t start_token);
-int64_t print(ast* parent, const token_list* tokens, int64_t start_token);
-int64_t variable(ast* parent, const token_list* tokens, int64_t start_token);
+int64_t grave(struct ast* parent, const struct token_list* tokens, int64_t start_token);
+int64_t loop(struct ast* parent, const struct token_list* tokens, int64_t start_token);
+int64_t bifurcate(struct ast* parent, const struct token_list* tokens, int64_t start_token);
+int64_t death(struct ast* parent, const struct token_list* tokens, int64_t start_token);
+int64_t import(struct ast* parent, const struct token_list* tokens, int64_t start_token);
+int64_t execute(struct ast* parent, const struct token_list* tokens, int64_t start_token);
+int64_t print(struct ast* parent, const struct token_list* tokens, int64_t start_token);
+int64_t variable(struct ast* parent, const struct token_list* tokens, int64_t start_token);
 bool is_valid_var(const char* str);
 
 // THE FOLLOWING MACROS EVALUATE ARGUMENTS MULTIPLE TIMES.
@@ -33,8 +33,8 @@ bool is_valid_var(const char* str);
 	} \
 } while (0)
 
-ast* parse(const token_list* tokens) {
-	ast* root = malloc(sizeof(*root));
+struct ast* parse(const struct token_list* tokens) {
+	struct ast* root = malloc(sizeof(*root));
 	MALLOC_NULL_CHECK(root);
 	root->type = ROOT_NODE;
 	root->val.str = NULL;
@@ -44,7 +44,7 @@ ast* parse(const token_list* tokens) {
 	for (int64_t i = 0; i < tokens->length;) {
 		i += grave(root, tokens, i);
 	}
-	ast* last = &(root->children[root->num_children - 1]);
+	struct ast* last = &(root->children[root->num_children - 1]);
 	if (last->type != OPERATION_NODE || last->val.op != DIE_OP || strcmp(last->children[0].val.str, "THIS") != 0) {
 		fprintf(stderr, "Error: final grave is not THIS.DIE()\n");
 		exit(EXIT_FAILURE);
@@ -53,7 +53,7 @@ ast* parse(const token_list* tokens) {
 	return root;
 }
 
-int64_t grave(ast* parent, const token_list* tokens, int64_t start_token) {
+int64_t grave(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
 	if (strcmp(tokens->tokens[start_token].str, "~ATH") == 0) {
 		return loop(parent, tokens, start_token);
 	}
@@ -66,7 +66,7 @@ int64_t grave(ast* parent, const token_list* tokens, int64_t start_token) {
 	return death(parent, tokens, start_token);
 }
 
-int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
+int64_t loop(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
 	ASSERT_NOT_NULL(parent);
 	parent->num_children++;
 	if (parent->num_children == 1) {
@@ -75,7 +75,7 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
 	}
 	MALLOC_NULL_CHECK(parent->children);
-	ast* this_node = &(parent->children[parent->num_children - 1]);
+	struct ast* this_node = &(parent->children[parent->num_children - 1]);
 	this_node->type = OPERATION_NODE;
 	this_node->val.op = LOOP_OP;
 	this_node->num_children = 0;
@@ -111,7 +111,7 @@ int64_t loop(ast* parent, const token_list* tokens, int64_t start_token) {
 	return cur_token - start_token;
 }
 
-int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token) {
+int64_t bifurcate(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
 	ASSERT_NOT_NULL(parent);
 	parent->num_children++;
 	if (parent->num_children == 1) {
@@ -120,7 +120,7 @@ int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token) {
 		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
 	}
 	MALLOC_NULL_CHECK(parent->children);
-	ast* this_node = &(parent->children[parent->num_children - 1]);
+	struct ast* this_node = &(parent->children[parent->num_children - 1]);
 	this_node->type = OPERATION_NODE;
 	this_node->val.op = BIFURCATE_OP;
 	this_node->num_children = 0;
@@ -157,7 +157,7 @@ int64_t bifurcate(ast* parent, const token_list* tokens, int64_t start_token) {
 	return cur_token - start_token;
 }
 
-int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
+int64_t death(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
 	ASSERT_NOT_NULL(parent);
 	parent->num_children++;
 	if (parent->num_children == 1) {
@@ -166,7 +166,7 @@ int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
 		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
 	}
 	MALLOC_NULL_CHECK(parent->children);
-	ast* this_node = &(parent->children[parent->num_children - 1]);
+	struct ast* this_node = &(parent->children[parent->num_children - 1]);
 	this_node->type = OPERATION_NODE;
 	this_node->val.op = DIE_OP;
 	this_node->num_children = 0;
@@ -199,7 +199,7 @@ int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
 			this_node->children = realloc(this_node->children, sizeof(*(this_node->children)) * this_node->num_children);
 		}
 		MALLOC_NULL_CHECK(this_node->children);
-		ast* child_node = &(this_node->children[this_node->num_children - 1]);
+		struct ast* child_node = &(this_node->children[this_node->num_children - 1]);
 		child_node->type = STRING_NODE;
 		const int16_t thislen = 5;
 		child_node->val.str = malloc(thislen * sizeof(char));
@@ -234,7 +234,7 @@ int64_t death(ast* parent, const token_list* tokens, int64_t start_token) {
 	return cur_token - start_token;
 }
 
-int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
+int64_t import(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
 	ASSERT_NOT_NULL(parent);
 	parent->num_children++;
 	if (parent->num_children == 1) {
@@ -243,7 +243,7 @@ int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
 		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
 	}
 	MALLOC_NULL_CHECK(parent->children);
-	ast* this_node = &(parent->children[parent->num_children - 1]);
+	struct ast* this_node = &(parent->children[parent->num_children - 1]);
 	this_node->type = OPERATION_NODE;
 	this_node->val.op = IMPORT_OP;
 	this_node->num_children = 1;
@@ -287,7 +287,7 @@ int64_t import(ast* parent, const token_list* tokens, int64_t start_token) {
 	return cur_token - start_token;
 }
 
-int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
+int64_t execute(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
 	int64_t cur_token = start_token;
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "EXECUTE", tokens->tokens[cur_token].lineno);
@@ -310,7 +310,7 @@ int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
 			parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
 		}
 		MALLOC_NULL_CHECK(parent->children);
-		ast* this_node = &(parent->children[parent->num_children - 1]);
+		struct ast* this_node = &(parent->children[parent->num_children - 1]);
 		this_node->type = OPERATION_NODE;
 		this_node->val.op = NULL_OP;
 		this_node->num_children = 0;
@@ -333,7 +333,7 @@ int64_t execute(ast* parent, const token_list* tokens, int64_t start_token) {
 	return cur_token - start_token;
 }
 
-int64_t print(ast* parent, const token_list* tokens, int64_t start_token) {
+int64_t print(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
 	ASSERT_NOT_NULL(parent);
 	parent->num_children++;
 	if (parent->num_children == 1) {
@@ -342,7 +342,7 @@ int64_t print(ast* parent, const token_list* tokens, int64_t start_token) {
 		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
 	}
 	MALLOC_NULL_CHECK(parent->children);
-	ast* this_node = &(parent->children[parent->num_children - 1]);
+	struct ast* this_node = &(parent->children[parent->num_children - 1]);
 	this_node->type = OPERATION_NODE;
 	this_node->val.op = PRINT_OP;
 	this_node->num_children = 1;
@@ -376,7 +376,7 @@ int64_t print(ast* parent, const token_list* tokens, int64_t start_token) {
 	return cur_token - start_token;
 }
 
-int64_t variable(ast* parent, const token_list* tokens, int64_t start_token) {
+int64_t variable(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
 	if (!is_valid_var(tokens->tokens[start_token].str)) { 
 		fprintf(stderr, "Syntax error on line %ld: '%s' is an invalid variable name.\n", tokens->tokens[start_token].lineno, tokens->tokens[start_token].str);
 		exit(EXIT_FAILURE);
@@ -390,7 +390,7 @@ int64_t variable(ast* parent, const token_list* tokens, int64_t start_token) {
 		parent->children = realloc(parent->children, sizeof(*(parent->children)) * parent->num_children);
 	}
 	MALLOC_NULL_CHECK(parent->children);
-	ast* this_node = &(parent->children[parent->num_children - 1]);
+	struct ast* this_node = &(parent->children[parent->num_children - 1]);
 	this_node->type = STRING_NODE;
 	this_node->children = NULL;
 	this_node->num_children = 0;
@@ -428,7 +428,7 @@ bool is_valid_var(const char* str) {
 	return true;
 }
 
-void free_ast(ast *tree) {
+void free_ast(struct ast *tree) {
 	if (tree->num_children > 0) {
 		for (int64_t i = 0; i < tree->num_children; i++) {
 			free_ast(&(tree->children[i]));

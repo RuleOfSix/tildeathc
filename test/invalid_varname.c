@@ -1,3 +1,4 @@
+#include <tokenize.h>
 #include <parse.h>
 #include <project_info.h>
 #include <stdlib.h>
@@ -7,7 +8,7 @@
 #include <string.h>
 
 int32_t main() {
-	token input_tokens[] = {
+	struct token input_tokens[] = {
 		{"~ATH", 1},
 		{"(", 1},
 		{"NULL", 1},
@@ -20,7 +21,7 @@ int32_t main() {
 		{")", 2},
 		{";", 2}
 	};
-	token_list input = {input_tokens, 12};
+	struct token_list input = {input_tokens, 12};
 
 	parse(&input);
 	fprintf(stderr, "Test failed: parser did not throw a syntax error when given incorrect input.\n");
