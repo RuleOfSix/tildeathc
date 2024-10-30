@@ -13,7 +13,7 @@ enum il_operation {
 	IL_ABS_OP,
 	IL_LIB_OP,
 	IL_UNI_OP,
-	IL_ROOT,
+	IL_BIF_OP,
 };
 
 enum il_node_type {
@@ -22,11 +22,12 @@ enum il_node_type {
 	IL_DEC_NODE,
 	IL_TAR_NODE, 
 	IL_OP_NODE,
+	IL_ROOT_NODE,
 };
 
 union il_node_value {
 	enum il_operation op;
-	int64_t id;
+	int64_t tar;
 	char* str;
 };
 
@@ -39,7 +40,7 @@ struct il_node {
 	struct il_node* children;
 };
 
-struct il_node* generate_il(struct ast* ast);
+struct il_node* generate_il(const struct ast* ast);
 void free_il_tree(struct il_node* il_tree);
 
 #endif
