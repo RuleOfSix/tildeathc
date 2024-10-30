@@ -1,6 +1,7 @@
 #ifndef RULEOFSIX_NULLCHECK_H
 #define RULEOFSIX_NULLCHECK_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #define MALLOC_NULL_CHECK(var) do { \
