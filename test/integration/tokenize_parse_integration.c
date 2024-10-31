@@ -1,3 +1,4 @@
+#include <tildeathc_test.h>
 #include <project_info.h>
 #include <tokenize.h>
 #include <parse.h>
@@ -15,6 +16,10 @@ bool compare(struct ast* expected, struct ast* actual);
 
 int32_t main(void) {
 	FILE* input = fopen(TEST_INPUT_DIR "/TOKENIZE_PARSE_INTEGRATION.~ATH", "r");
+	if (input == NULL) {
+		fprintf(stderr, "Unable to open test input file. Terminating\n");
+		exit(EXIT_FAILURE);
+	}
 
 	struct ast grave_1_c[] = {{.type=STRING_NODE, .val.str="library", .lineno=1, .num_children=0, .children=NULL},
 						      {.type=STRING_NODE, .val.str="NUMBERS", .lineno=1, .num_children=0, .children=NULL}};
@@ -48,7 +53,7 @@ int32_t main(void) {
 		fprintf(stderr, "Test failed: parse output null.\n");
 		exit(EXIT_FAILURE);
 	}
-	if (!compare(&expected_output, output)) {
+	if (!compare_ast(&expected_output, output)) {
 		fprintf(stderr, "Test failed: parse output does not match expected AST.\n");
 		exit(EXIT_FAILURE);
 	}
@@ -58,35 +63,3 @@ int32_t main(void) {
 	return 0;
 }
 
-bool compare(struct ast* expected, struct ast* actual) {
-	if (expected->type != actual->type) {
-		fprintf(stderr, "Expected node type of %s, got %s on line %ld.\n", LOOKUP_NODE_TYPE(expected->type), LOOKUP_NODE_TYPE(actual->type), actual->lineno);
-		return false;
-	}
-	if (expected->lineno != actual->lineno) {
-		fprintf(stderr, "Expected line number of %ld, got %ld for node of type %s.\n", expected->lineno, actual->lineno, LOOKUP_NODE_TYPE(actual->type));
-		return false;
-	}
-	if (expected->type == STRING_NODE) {
-		if (strcmp(expected->val.str, actual->val.str) != 0) {
-			fprintf(stderr, "Expected string value of %s, got %s on line %ld.\n", expected->val.str, actual->val.str, actual->lineno);
-			return false;
-		}
-	}
-	if (expected->type == OPERATION_NODE) {
-		if (expected->val.op != actual->val.op) {
-			fprintf(stderr, "Expected operation value of %s, got %s on line %ld.\n", LOOKUP_OPERATION(expected->val.op), LOOKUP_OPERATION(actual->val.op), actual->lineno);
-			return false;
-		}
-	}
-	if (expected->num_children != actual->num_children) {
-		fprintf(stderr, "Expected %ld children, got %ld on line %ld.\n", expected->num_children, actual->num_children, actual->lineno);
-		return false;
-	}
-	for (int64_t i = 0; i < expected->num_children; i++) {
-		if (!compare(&(expected->children[i]), &(actual->children[i]))) {
-			return false;	
-		}
-	}
-	return true;
-}
