@@ -1,3 +1,4 @@
+#include <tildeathc_test.h>
 #include <tokenize.h>
 #include <parse.h>
 #include <project_info.h>
@@ -14,8 +15,7 @@ int32_t main() {
 	};
 	struct token_list input = {input_tokens, 2};
 
-	parse(&input);
-	fprintf(stderr, "Test failed: parser did not throw a syntax error when given incorrect input.\n");
+	parse_test(&input, NULL, true);
 	return 0;
 }
 

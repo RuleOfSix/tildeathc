@@ -1,3 +1,4 @@
+#include <tildeathc_test.h>
 #include <tokenize.h>
 #include <project_info.h>
 #include <stdio.h>
@@ -16,7 +17,6 @@ int32_t main(void) {
 		fprintf(stderr, "Test error: failed to open tokenize test input file. Terminating.\n");
 		exit(EXIT_FAILURE);
 	}
-	bool passed = true;
 
 	struct token expected_tokens[] = {
         {"import", 1},
@@ -73,33 +73,8 @@ int32_t main(void) {
 	};
 
 	struct token_list expected_outputs = { expected_tokens, 51 };
-	struct token_list* received_output = tokenize(test_input);
+	tokenize_test(test_input, &expected_outputs, false);
+	printf("Tokenize comment behavior test passed\n");
 	fclose(test_input);
-	if (received_output == NULL) {
-		fprintf(stderr, "Test error: tokenizer output null. Terminating.\n");
-		exit(EXIT_FAILURE);
-	}
-	
-	if (received_output->length != expected_outputs.length) {
-		fprintf(stderr, "Test failed: expected length property of %ld, output was %ld. Terminating.\n", expected_outputs.length, received_output->length);
-		exit(EXIT_FAILURE);
-	}
-
-	for (int64_t i = 0; i < received_output->length; i++) {
-		if (strcmp(received_output->tokens[i].str, expected_outputs.tokens[i].str) != 0) {
-			fprintf(stderr, "Test failed: expected token %ld's str to be %s, output was %s.\n", i, expected_outputs.tokens[i].str, received_output->tokens[i].str);
-			passed = false;
-		}
-		if (received_output->tokens[i].lineno != expected_outputs.tokens[i].lineno) {
-			fprintf(stderr, "Test failed: expected token %ld's lineno to be %ld, output was %ld.\n", i, expected_outputs.tokens[i].lineno, received_output->tokens[i].lineno);
-			passed = false;
-		}
-	}
-	 
-	if (passed) {
-		printf("Tokenizer module passed all tests.\n");
-	}
-	free_token_list(received_output);
-	free(received_output);
 	return 0;
 }
