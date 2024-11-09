@@ -8,4 +8,8 @@ add_library(parse STATIC parse.c)
 target_include_directories(parse PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
 								 PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
 								 )
+add_library(util STATIC util.c)
+target_include_directories(util PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+								 PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+								 )
 
