@@ -1,6 +1,7 @@
 #include <tokenize.h>
 #include <nullcheck.h>
 #include <parse.h>
+#include <util.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -395,11 +396,7 @@ int64_t variable(struct ast* parent, const struct token_list* tokens, int64_t st
 	this_node->children = NULL;
 	this_node->num_children = 0;
 	this_node->lineno = tokens->tokens[start_token].lineno;
-
-	int32_t varlen = strlen(tokens->tokens[start_token].str);
-	this_node->val.str = malloc((varlen + 1) * sizeof(char));
-	MALLOC_NULL_CHECK(this_node->val.str);
-	memcpy(this_node->val.str, tokens->tokens[start_token].str, varlen + 1);
+	this_node->val.str = util_newstr(tokens->tokens[start_token].str);
 
 	return 1;
 }
