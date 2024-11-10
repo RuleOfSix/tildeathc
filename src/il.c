@@ -73,7 +73,8 @@ void convert_op_node(const struct ast* node, struct il_node* output) {
 					convert_print_node(node, output);
 					break;
 				case NULL_OP:
-					output->id = -1;
+					fprintf(stderr, "Internal Compiler Error: NULL_OP AST node at line %ld erroneously passed to convert_op_node function. Terminating.\n", node->lineno);
+					exit(EXIT_FAILURE);
 					break;
 			}
 			break;
@@ -82,14 +83,16 @@ void convert_op_node(const struct ast* node, struct il_node* output) {
 
 void convert_loop_node(const struct ast* node, struct il_node* output) {
 	if (node->num_children < 2 || node->children == NULL) {
-		fprintf(stderr, "Internal Compiler Error: malformed LOOP_OP node at line %ld passed to convert_node function. Terminating.\n", node->lineno);
+		fprintf(stderr, "Internal Compiler Error: malformed LOOP_OP node at line %ld passed to convert_loop_node function. Terminating.\n", node->lineno);
 		exit(EXIT_FAILURE);
 	}
 	output->type = IL_OP_NODE;
 	output->val.op = IL_IF_OP;
 	output->num_children = node->children[node->num_children - 1].val.op == NULL_OP ? node->num_children : node->num_children + 1;
+	
+	convert_var_node(node->children, output->children);
 
-	for (int64_t i = 0; i < node->num_children - 1; i++) {
+	for (int64_t i = 1; i < node->num_children - 1; i++) {
 		convert_op_node(node->children + i, output->children + i);
 	}
 
@@ -115,7 +118,7 @@ void convert_loop_node(const struct ast* node, struct il_node* output) {
 
 void convert_bifurcate_node(const struct ast* node, struct il_node* output) {
 	if (node->num_children != 3 || node->children == NULL) {
-		fprintf(stderr, "Internal Compiler Error: malformed BIFURCATE_OP node at line %ld passed to convert_node function. Terminating.\n", node->lineno);
+		fprintf(stderr, "Internal Compiler Error: malformed BIFURCATE_OP node at line %ld passed to convert_bifurcate_node function. Terminating.\n", node->lineno);
 		exit(EXIT_FAILURE);
 	}
 	output->type = IL_OP_NODE;
@@ -126,6 +129,86 @@ void convert_bifurcate_node(const struct ast* node, struct il_node* output) {
 	convert_var_node(node->children, output->children);
 	convert_declaration_node(node->children + 1, output->children + 1);
 	convert_declaration_node(node->children + 1, output->children + 1);
+}
+
+void convert_die_node(const struct ast* node, struct il_node* output) {
+	if (node->num_children != 1 || node->children == NULL) {
+		fprintf(stderr, "Internal Compiler Error: malformed DIE_OP node at line %ld passed to convert_die_node function. Terminating.\n", node->lineno);
+		exit(EXIT_FAILURE);
+	}
+	output->type = IL_OP_NODE;
+	output->val.op = IL_DIE_OP;
+	output->num_children = 1;
+	output->children = malloc(output->num_children * sizeof(*(output->children)));
+	MALLOC_NULL_CHECK(output->children);
+	convert_var_node(node->children, output->children);		
+}
+
+void convert_import_node(const struct ast* node, struct il_node* output) {
+	if (node->num_children != 2 || node->children == NULL || node->children[0].type != STRING_NODE || node->children[0].val.str == NULL) {
+		fprintf(stderr, "Internal Compiler Error: malformed IMPORT_OP node at line %ld passed to convert_import_node function. Terminating.\n", node->lineno);
+		exit(EXIT_FAILURE);
+	}
+	output->type = IL_OP_NODE;
+	if (strcmp(node->children[0].val.str, "abstract") == 0) {
+		output->val.op = IL_ABS_OP;
+	} else if (strcmp(node->children[0].val.str, "universe") == 0) {
+		output->val.op = IL_UNI_OP;
+	} else if (strcmp(node->children[0].val.str, "library") == 0) {
+		output->val.op = IL_LIB_OP;
+	} else if (strcmp(node->children[0].val.str, "input") == 0) {
+		output->val.op = IL_IN_OP;
+	}
+	output->num_children = 1;
+	output->children = malloc(output->num_children * sizeof(*(output->children)));
+	MALLOC_NULL_CHECK(output->children);
+	convert_declaration_node(node->children + 1, output->children);	
+}
+
+void convert_print_node(const struct ast* node, struct il_node* output) {
+	if (node->num_children != 1 || node->children == NULL) {
+		fprintf(stderr, "Internal Compiler Error: malformed PRINT_OP node at line %ld passed to convert_print_node function. Terminating.\n", node->lineno);
+		exit(EXIT_FAILURE);
+	}
+	output->type = IL_OP_NODE;
+	output->val.op = IL_OUT_OP;
+	output->num_children = 1;
+	output->children = malloc(output->num_children * sizeof(*(output->children)));
+	MALLOC_NULL_CHECK(output->children);
+	convert_string_node(node->children, output->children);
+}
+
+void convert_declaration_node(const struct ast* node, struct il_node* output) {
+	if (node->type != STRING_NODE || node->val.str == NULL) {
+		fprintf(stderr, "Internal Compiler Error: malformed STRING_NODE node at line %ld passed to convert_declaration_node function. Terminating.\n", node->lineno);
+		exit(EXIT_FAILURE);
+	}
+	output->type = IL_DEC_NODE;
+	output->val.str = util_newstr(node->val.str);
+	output->num_children = 0;
+	output->children = NULL;
+}
+
+void convert_var_node(const struct ast* node, struct il_node* output) {
+	if (node->type != STRING_NODE || node->val.str == NULL) {
+		fprintf(stderr, "Internal Compiler Error: malformed STRING_NODE node at line %ld passed to convert_var_node function. Terminating.\n", node->lineno);
+		exit(EXIT_FAILURE);
+	}
+	output->type = IL_VAR_NODE;
+	output->val.str = util_newstr(node->val.str);
+	output->num_children = 0;
+	output->children = NULL;
+}
+
+void convert_string_node(const struct ast* node, struct il_node* output) {
+	if (node->type != STRING_NODE || node->val.str == NULL) {
+		fprintf(stderr, "Internal Compiler Error: malformed STRING_NODE node at line %ld passed to convert_string_node function. Terminating.\n", node->lineno);
+		exit(EXIT_FAILURE);
+	}
+	output->type = IL_STR_NODE;
+	output->val.str = util_newstr(node->val.str);
+	output->num_children = 0;
+	output->children = NULL;
 }
 
 int64_t generate_id(void) {
