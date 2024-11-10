@@ -2,6 +2,7 @@
 #include <nullcheck.h>
 #include <tokenize.h>
 #include <parse.h>
+#include <il.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -50,6 +51,25 @@ void parse_test(struct token_list* input, struct ast* expected, bool should_fail
 	}
 }
 
+bool compare_token_list(struct token_list* expected, struct token_list* actual) {
+	if (actual->length != expected->length) {
+		fprintf(stderr, "Test failed: expected length property of %ld, output was %ld.\n", expected->length, actual->length);
+		return false;
+	}
+
+	for (int64_t i = 0; i < actual->length; i++) {
+		if (strcmp(actual->tokens[i].str, expected->tokens[i].str) != 0) {
+			fprintf(stderr, "Test failed: expected token %ld's str to be %s, output was %s.\n", i, expected->tokens[i].str, actual->tokens[i].str);
+			return false;
+		}
+		if (actual->tokens[i].lineno != expected->tokens[i].lineno) {
+			fprintf(stderr, "Test failed: expected token %ld's lineno to be %ld, output was %ld.\n", i, expected->tokens[i].lineno, actual->tokens[i].lineno);
+			return false;
+		}
+	}
+	return true;
+}
+
 bool compare_ast(struct ast* expected, struct ast* actual) {
 	if (expected->type != actual->type) {
 		fprintf(stderr, "Expected node type of %s, got %s on line %ld.\n", LOOKUP_NODE_TYPE(expected->type), LOOKUP_NODE_TYPE(actual->type), actual->lineno);
@@ -61,7 +81,7 @@ bool compare_ast(struct ast* expected, struct ast* actual) {
 	}
 	if (expected->type == STRING_NODE) {
 		if (strcmp(expected->val.str, actual->val.str) != 0) {
-			fprintf(stderr, "Expected string value of %s, got %s on line %ld.\n", expected->val.str, actual->val.str, actual->lineno);
+			fprintf(stderr, "Expected string value of \"%s\", got \"%s\" on line %ld.\n", expected->val.str, actual->val.str, actual->lineno);
 			return false;
 		}
 	}
@@ -76,26 +96,56 @@ bool compare_ast(struct ast* expected, struct ast* actual) {
 		return false;
 	}
 	for (int64_t i = 0; i < expected->num_children; i++) {
-		if (!compare_ast(&(expected->children[i]), &(actual->children[i]))) {
+		if (!compare_ast(expected->children + i, actual->children + i)) {
 			return false;	
 		}
 	}
 	return true;
 }
 
-bool compare_token_list(struct token_list* expected, struct token_list* actual) {
-	if (actual->length != expected->length) {
-		fprintf(stderr, "Test failed: expected length property of %ld, output was %ld.\n", expected->length, actual->length);
+bool compare_il_tree(struct il_node* expected, struct il_node* actual) {
+	if (expected->id != actual->id) {
+		fprintf(stderr, "Expected id of %ld, got %ld on line %ld.\n", expected->id, actual->id, actual->lineno);
 		return false;
 	}
+	if (expected->lineno != actual->lineno) {
+		fprintf(stderr, "Expected line number of %ld, got %ld for node with id %ld.\n", expected->lineno, actual->lineno, actual->id);
+		return false;
+	}
+	if (expected->type != actual->type) {
+		fprintf(stderr, "Expected type of %s, got %s on line %ld.\n", LOOKUP_IL_TYPE(expected->type), LOOKUP_IL_TYPE(actual->type), actual->lineno);
+		return false;
+	}
+	switch (actual->type) {
+		case IL_TAR_NODE:
+			if (expected->val.tar != actual->val.tar) {
+				fprintf(stderr, "Expected target of %ld, got %ld on line %ld.\n", expected->val.tar, actual->val.tar, actual->lineno);
+				return false;
+			}
+			break;
+		case IL_DEC_NODE: //FALLTHROUGH
+		case IL_STR_NODE: //FALLTHROUGH
+		case IL_VAR_NODE:
+			if (strcmp(expected->val.str, actual->val.str) != 0) {
+				fprintf(stderr, "Expected string value of \"%s\", got \"%s\" on line %ld.\n", expected->val.str, actual->val.str, actual->lineno);
+				return false;
+			}
+			break;
+		case IL_OP_NODE:
+			if (expected->val.op != actual->val.op) {
+				fprintf(stderr, "Expected operation value of %s, got %s on line %ld.\n", LOOKUP_IL_OPERATION(expected->val.op), LOOKUP_IL_OPERATION(actual->val.op), actual->lineno);
+			}
+			break;
+		case IL_ROOT_NODE:
+			break;
 
-	for (int64_t i = 0; i < actual->length; i++) {
-		if (strcmp(actual->tokens[i].str, expected->tokens[i].str) != 0) {
-			fprintf(stderr, "Test failed: expected token %ld's str to be %s, output was %s.\n", i, expected->tokens[i].str, actual->tokens[i].str);
-			return false;
-		}
-		if (actual->tokens[i].lineno != expected->tokens[i].lineno) {
-			fprintf(stderr, "Test failed: expected token %ld's lineno to be %ld, output was %ld.\n", i, expected->tokens[i].lineno, actual->tokens[i].lineno);
+	}
+	if (expected->num_children != actual->num_children) {
+		fprintf(stderr, "Expected %ld children, got %ld on line %ld.\n", expected->num_children, actual->num_children, actual->lineno);
+		exit(EXIT_FAILURE);
+	}
+	for (int64_t i = 0; i < actual->num_children; i++) {
+		if (!compare_il_tree(expected->children + i, actual->children + i)) {
 			return false;
 		}
 	}

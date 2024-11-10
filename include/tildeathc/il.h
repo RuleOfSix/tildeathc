@@ -52,7 +52,7 @@ struct il_node {
 
 
 
-#define LOOKUP_IL_NODE_TYPE(il_node_type) ((il_node_type) == IL_VAR_NODE ? "IL_VAR_NODE" : (\
+#define LOOKUP_IL_TYPE(il_node_type) ((il_node_type) == IL_VAR_NODE ? "IL_VAR_NODE" : (\
 									(il_node_type) == IL_STR_NODE ? "IL_STR_NODE" : (\
 									(il_node_type) == IL_DEC_NODE ? "IL_DEC_NODE" : (\
 									(il_node_type) == IL_TAR_NODE ? "IL_TAR_NODE" : (\
