@@ -20,5 +20,5 @@ add_library(il STATIC il.c)
 target_include_directories(il PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
 							  PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
 							  )
-target_link_libraries(il PRIVATE util);
+target_link_libraries(il PRIVATE util)
 
