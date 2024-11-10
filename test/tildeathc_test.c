@@ -11,7 +11,7 @@
 
 
 
-void tokenize_test(FILE* input, struct token_list* expected, bool should_fail) {
+void tokenize_test(FILE* input, const struct token_list* expected, bool should_fail) {
 	ASSERT_NOT_NULL(input);	
 	if (!should_fail) {
 		ASSERT_NOT_NULL(expected);	
@@ -31,7 +31,7 @@ void tokenize_test(FILE* input, struct token_list* expected, bool should_fail) {
 	}
 }
 
-void parse_test(struct token_list* input, struct ast* expected, bool should_fail) {
+void parse_test(const struct token_list* input, const struct ast* expected, bool should_fail) {
 	ASSERT_NOT_NULL(input);
 	if (!should_fail) {
 		ASSERT_NOT_NULL(expected);
@@ -46,12 +46,32 @@ void parse_test(struct token_list* input, struct ast* expected, bool should_fail
 		exit(EXIT_FAILURE);	
 	}	
 	if (!compare_ast(expected, output)) {
-		fprintf(stderr, "Parse test failed: output AST does not match waht was expected.\n");
+		fprintf(stderr, "Parse test failed: output AST does not match what was expected.\n");
 		exit(EXIT_FAILURE);
 	}
 }
 
-bool compare_token_list(struct token_list* expected, struct token_list* actual) {
+void il_test(const struct ast* input, const struct il_node* expected, bool should_fail) {
+	ASSERT_NOT_NULL(input);
+	if (!should_fail) {
+		ASSERT_NOT_NULL(expected);
+	}
+	struct il_node* output = generate_il(input);
+	if (should_fail) {
+		fprintf(stderr, "IL test failed: generate_il did not fail with incorrect input.\n");
+		exit(EXIT_SUCCESS);
+	}
+	if (output == NULL) {
+		fprintf(stderr, "IL test failed: generate_il output null.\n");
+		exit(EXIT_FAILURE);
+	}
+	if (!compare_il_tree(expected, output)) {
+		fprintf(stderr, "IL test failed: output tree does not match what was expected.\n");
+		exit(EXIT_FAILURE);
+	}
+}
+
+bool compare_token_list(const struct token_list* expected, const struct token_list* actual) {
 	if (actual->length != expected->length) {
 		fprintf(stderr, "Test failed: expected length property of %ld, output was %ld.\n", expected->length, actual->length);
 		return false;
@@ -70,7 +90,7 @@ bool compare_token_list(struct token_list* expected, struct token_list* actual) 
 	return true;
 }
 
-bool compare_ast(struct ast* expected, struct ast* actual) {
+bool compare_ast(const struct ast* expected, const struct ast* actual) {
 	if (expected->type != actual->type) {
 		fprintf(stderr, "Expected node type of %s, got %s on line %ld.\n", LOOKUP_NODE_TYPE(expected->type), LOOKUP_NODE_TYPE(actual->type), actual->lineno);
 		return false;
@@ -103,7 +123,7 @@ bool compare_ast(struct ast* expected, struct ast* actual) {
 	return true;
 }
 
-bool compare_il_tree(struct il_node* expected, struct il_node* actual) {
+bool compare_il_tree(const struct il_node* expected, const struct il_node* actual) {
 	if (expected->id != actual->id) {
 		fprintf(stderr, "Expected id of %ld, got %ld on line %ld.\n", expected->id, actual->id, actual->lineno);
 		return false;
