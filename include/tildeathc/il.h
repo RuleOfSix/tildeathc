@@ -14,6 +14,7 @@ enum il_operation {
 	IL_LIB_OP,
 	IL_UNI_OP,
 	IL_BIF_OP,
+	IL_BLOCK_OP,
 };
 
 enum il_node_type {
@@ -48,6 +49,7 @@ struct il_node {
 									(il_operation) == IL_ABS_OP ? "IL_ABS_OP" : (\
 									(il_operation) == IL_LIB_OP ? "IL_LIB_OP" : (\
 									(il_operation) == IL_UNI_OP ? "IL_UNI_OP" : (\
+									(il_operation) == IL_BLOCK_OP ? "IL_BLOCK_OP" : (\
 									(il_operation) == IL_BIF_OP ? "IL_BIF_OP" : "NONE")))))))))
 
 
