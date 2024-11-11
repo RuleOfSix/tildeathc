@@ -118,6 +118,7 @@ void convert_loop_node(const struct ast* node, struct il_node* output) {
 	MALLOC_NULL_CHECK(if_node->children);
 
 	convert_var_node(node->children, if_node->children);
+	if_node->children[0].lineno = if_node->lineno;
 
 	struct il_node* jmp_node = &(if_node->children[1]);
 	jmp_node->type = IL_OP_NODE;
@@ -208,6 +209,8 @@ void convert_declaration_node(const struct ast* node, struct il_node* output) {
 		fprintf(stderr, "Internal Compiler Error: malformed STRING_NODE node at line %ld passed to convert_declaration_node function. Terminating.\n", node->lineno);
 		exit(EXIT_FAILURE);
 	}
+	output->id = generate_id();
+	output->lineno = node->lineno;
 	output->type = IL_DEC_NODE;
 	output->val.str = util_newstr(node->val.str);
 	output->num_children = 0;
@@ -219,6 +222,8 @@ void convert_var_node(const struct ast* node, struct il_node* output) {
 		fprintf(stderr, "Internal Compiler Error: malformed STRING_NODE node at line %ld passed to convert_var_node function. Terminating.\n", node->lineno);
 		exit(EXIT_FAILURE);
 	}
+	output->id = generate_id();
+	output->lineno = node->lineno;
 	output->type = IL_VAR_NODE;
 	output->val.str = util_newstr(node->val.str);
 	output->num_children = 0;
@@ -230,6 +235,8 @@ void convert_string_node(const struct ast* node, struct il_node* output) {
 		fprintf(stderr, "Internal Compiler Error: malformed STRING_NODE node at line %ld passed to convert_string_node function. Terminating.\n", node->lineno);
 		exit(EXIT_FAILURE);
 	}
+	output->id = generate_id();
+	output->lineno = node->lineno;
 	output->type = IL_STR_NODE;
 	output->val.str = util_newstr(node->val.str);
 	output->num_children = 0;
