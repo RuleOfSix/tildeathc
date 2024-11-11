@@ -88,31 +88,56 @@ void convert_loop_node(const struct ast* node, struct il_node* output) {
 	}
 	output->type = IL_OP_NODE;
 	output->val.op = IL_IF_OP;
-	output->num_children = node->children[node->num_children - 1].val.op == NULL_OP ? node->num_children : node->num_children + 1;
+	output->num_children = 2;
+	output->children = malloc(sizeof(*(output->children)) * output->num_children);
+	MALLOC_NULL_CHECK(output->children);
 	
 	convert_var_node(node->children, output->children);
 
-	for (int64_t i = 1; i < node->num_children - 1; i++) {
-		convert_op_node(node->children + i, output->children + i);
+	struct il_node* block_node = &(output->children[1]);
+	block_node->id = generate_id();
+	block_node->lineno = node->children[0].lineno;
+	block_node->type = IL_OP_NODE;
+	block_node->val.op = IL_BLOCK_OP;
+	block_node->num_children = node->children[node->num_children - 1].val.op == NULL_OP ? node->num_children - 1 : node->num_children;
+	block_node->children = malloc(sizeof(*(block_node->children)) * block_node->num_children);
+	MALLOC_NULL_CHECK(block_node->children);
+
+
+	for (int64_t i = 0; i < node->num_children - 2; i++) {
+		convert_op_node(node->children + i + 1, block_node->children + i);
 	}
 
-	struct il_node* jmp_node = &(output->children[node->num_children - 1]);
+	struct il_node* if_node = &(block_node->children[node->num_children - 2]);
+	if_node->type = IL_OP_NODE;
+	if_node->val.op = IL_IF_OP;
+	if_node->id = generate_id();
+	if_node->lineno = node->children[node->num_children - 1].lineno;
+	if_node->num_children = 2; 
+	if_node->children = malloc(sizeof(*(if_node->children)) * if_node->num_children); 
+	MALLOC_NULL_CHECK(if_node->children);
+
+	convert_var_node(node->children, if_node->children);
+
+	struct il_node* jmp_node = &(if_node->children[1]);
 	jmp_node->type = IL_OP_NODE;
 	jmp_node->val.op = IL_JMP_OP;
 	jmp_node->id = generate_id();
-	jmp_node->lineno = node->children[node->num_children - 1].lineno;
+	jmp_node->lineno = if_node->lineno;
 	jmp_node->num_children = 1; 
-	jmp_node->children = malloc(sizeof(*(output->children))); 
+	jmp_node->children = malloc(sizeof(*(jmp_node->children)) * jmp_node->num_children); 
 	MALLOC_NULL_CHECK(jmp_node->children);
-	jmp_node->children[0].type = IL_TAR_NODE;
-	jmp_node->children[0].val.tar = output->id;
-	jmp_node->children[0].id = generate_id();
-	jmp_node->children[0].lineno = jmp_node->lineno;
-	jmp_node->children[0].num_children = 0;
-	jmp_node->children[0].children = NULL;
+
+	struct il_node* tar_node = &(jmp_node->children[0]);
+	tar_node->type = IL_TAR_NODE;
+	tar_node->val.tar = block_node->id;
+	tar_node->id = generate_id();
+	tar_node->lineno = jmp_node->lineno;
+	tar_node->num_children = 0;
+	tar_node->children = NULL;
 	
 	if (node->children[node->num_children - 1].val.op != NULL_OP) {
-		convert_op_node(node->children + node->num_children - 1, output->children + output->num_children - 1);
+		convert_op_node(node->children + node->num_children - 1, block_node->children + block_node->num_children - 1);
 	}
 }
 
