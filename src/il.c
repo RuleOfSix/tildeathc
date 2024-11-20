@@ -19,6 +19,7 @@ void convert_bifurcate_node(const struct ast* node, struct il_node* output);
 void convert_die_node(const struct ast* node, struct il_node* output);
 void convert_import_node(const struct ast* node, struct il_node* output);
 void convert_print_node(const struct ast* node, struct il_node* output);
+void convert_abstract_node(const struct ast* node, struct il_node* output);
 void convert_declaration_node(const struct ast* node, struct il_node* output);
 void convert_var_node(const struct ast* node, struct il_node* output);
 void convert_string_node(const struct ast* node, struct il_node* output);
@@ -153,8 +154,8 @@ void convert_bifurcate_node(const struct ast* node, struct il_node* output) {
 	output->children = malloc(output->num_children * sizeof(*(output->children)));
 	MALLOC_NULL_CHECK(output->children);
 	convert_var_node(node->children, output->children);
-	convert_declaration_node(node->children + 1, output->children + 1);
-	convert_declaration_node(node->children + 1, output->children + 1);
+	convert_abstract_node(node->children + 1, output->children + 1);
+	convert_abstract_node(node->children + 1, output->children + 1);
 }
 
 void convert_die_node(const struct ast* node, struct il_node* output) {
@@ -202,6 +203,18 @@ void convert_print_node(const struct ast* node, struct il_node* output) {
 	output->children = malloc(output->num_children * sizeof(*(output->children)));
 	MALLOC_NULL_CHECK(output->children);
 	convert_string_node(node->children, output->children);
+}
+
+void convert_abstract_node(const struct ast* node, struct il_node* output) {
+	if (node->type !=STRING_NODE || node->val.str == NULL) {
+		fprintf(stderr, "Internal Compiler Error: malformed STRING_NODE node at line %ld passed to convert_abstract_node function. Terminating\n", node->lineno);
+		exit(EXIT_FAILURE);
+	}
+	output->type = IL_OP_NODE;
+	output->val.op = IL_ABS_OP;
+	output->num_children = 1;
+	output->children = malloc(output->num_children * sizeof(*(output->children)));
+	convert_declaration_node(node, output->children);
 }
 
 void convert_declaration_node(const struct ast* node, struct il_node* output) {
