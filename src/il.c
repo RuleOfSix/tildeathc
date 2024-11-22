@@ -155,7 +155,7 @@ void convert_bifurcate_node(const struct ast* node, struct il_node* output) {
 	MALLOC_NULL_CHECK(output->children);
 	convert_var_node(node->children, output->children);
 	convert_abstract_node(node->children + 1, output->children + 1);
-	convert_abstract_node(node->children + 1, output->children + 1);
+	convert_abstract_node(node->children + 2, output->children + 2);
 }
 
 void convert_die_node(const struct ast* node, struct il_node* output) {
@@ -210,6 +210,8 @@ void convert_abstract_node(const struct ast* node, struct il_node* output) {
 		fprintf(stderr, "Internal Compiler Error: malformed STRING_NODE node at line %ld passed to convert_abstract_node function. Terminating\n", node->lineno);
 		exit(EXIT_FAILURE);
 	}
+	output->id = generate_id();
+	output->lineno = node->lineno;
 	output->type = IL_OP_NODE;
 	output->val.op = IL_ABS_OP;
 	output->num_children = 1;
