@@ -18,12 +18,12 @@ function(tildeathc_add_test args)
 	endif()
 endfunction()
 
-add_library(tildeathc_test STATIC tildeathc_test.c)
-target_include_directories(tildeathc_test			PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-													PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-													PRIVATE "${PROJECT_SOURCE_DIR}/test/include"
-												    )
-target_link_libraries(tildeathc_test tokenize parse il)
+add_library(tildeathc_test SHARED tildeathc_test.c)
+target_include_directories(tildeathc_test PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+										  PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+										  PRIVATE "${PROJECT_SOURCE_DIR}/test/include"
+										  )
+target_link_libraries(tildeathc_test tokenize_shared parse_shared il_shared)
 
 add_subdirectory(tokenize)
 add_subdirectory(parse)

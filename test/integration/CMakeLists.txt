@@ -1,3 +1,3 @@
 cmake_minimum_required(VERSION 3.22)
 
-tildeathc_add_test(TARGET_NAME tokenize_parse_integration TEST_NAME TokenParseIntegration SOURCE_FILE tokenize_parse_integration.c DEPENDENCIES parse;tokenize)
+tildeathc_add_test(TARGET_NAME tokenize_parse_integration TEST_NAME TokenParseIntegration SOURCE_FILE tokenize_parse_integration.c DEPENDENCIES parse_shared;tokenize_shared)
