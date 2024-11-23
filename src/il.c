@@ -227,7 +227,7 @@ void convert_declaration_node(const struct ast* node, struct il_node* output) {
 	output->id = generate_id();
 	output->lineno = node->lineno;
 	output->type = IL_DEC_NODE;
-	output->val.str = util_newstr(node->val.str);
+	output->val.str = util_strdup(node->val.str);
 	output->num_children = 0;
 	output->children = NULL;
 }
@@ -240,7 +240,7 @@ void convert_var_node(const struct ast* node, struct il_node* output) {
 	output->id = generate_id();
 	output->lineno = node->lineno;
 	output->type = IL_VAR_NODE;
-	output->val.str = util_newstr(node->val.str);
+	output->val.str = util_strdup(node->val.str);
 	output->num_children = 0;
 	output->children = NULL;
 }
@@ -253,7 +253,7 @@ void convert_string_node(const struct ast* node, struct il_node* output) {
 	output->id = generate_id();
 	output->lineno = node->lineno;
 	output->type = IL_STR_NODE;
-	output->val.str = util_newstr(node->val.str);
+	output->val.str = util_strdup(node->val.str);
 	output->num_children = 0;
 	output->children = NULL;
 }
@@ -261,4 +261,14 @@ void convert_string_node(const struct ast* node, struct il_node* output) {
 int64_t generate_id(void) {
 	static int64_t num_ids = 0;
 	return num_ids++;
+}
+
+void free_il_tree(struct il_node* il_tree) {
+	if (il_tree->type == IL_VAR_NODE || il_tree->type == IL_DEC_NODE || il_tree->type== IL_STR_NODE) {
+		free(il_tree->val.str);
+	}
+	for (int64_t i = 0; i < il_tree->num_children; i++) {
+		free_il_tree(il_tree->children + i);
+	}
+	free(il_tree->children);
 }

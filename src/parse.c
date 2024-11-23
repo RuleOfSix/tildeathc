@@ -396,7 +396,7 @@ int64_t variable(struct ast* parent, const struct token_list* tokens, int64_t st
 	this_node->children = NULL;
 	this_node->num_children = 0;
 	this_node->lineno = tokens->tokens[start_token].lineno;
-	this_node->val.str = util_newstr(tokens->tokens[start_token].str);
+	this_node->val.str = util_strdup(tokens->tokens[start_token].str);
 
 	return 1;
 }

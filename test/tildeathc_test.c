@@ -29,6 +29,8 @@ void tokenize_test(FILE* input, const struct token_list* expected, bool should_f
 		fprintf(stderr, "Tokenize test failed: output token list does not match what was expected.\n");
 		exit(EXIT_FAILURE);
 	}
+	free_token_list(output);
+	free(output);
 }
 
 void parse_test(const struct token_list* input, const struct ast* expected, bool should_fail) {
@@ -49,6 +51,8 @@ void parse_test(const struct token_list* input, const struct ast* expected, bool
 		fprintf(stderr, "Parse test failed: output AST does not match what was expected.\n");
 		exit(EXIT_FAILURE);
 	}
+	free_ast(output);
+	free(output);
 }
 
 void il_test(const struct ast* input, const struct il_node* expected, bool should_fail) {
@@ -69,6 +73,8 @@ void il_test(const struct ast* input, const struct il_node* expected, bool shoul
 		fprintf(stderr, "IL test failed: output tree does not match what was expected.\n");
 		exit(EXIT_FAILURE);
 	}
+	free_il_tree(output);
+	free(output);
 }
 
 bool compare_token_list(const struct token_list* expected, const struct token_list* actual) {

@@ -48,7 +48,11 @@ int32_t main(void) {
 						   {.type=OPERATION_NODE, .val.op=DIE_OP, .lineno=9, .num_children=1, .children=grave_6_c}};
 	struct ast expected_output = {.type=ROOT_NODE, .val.str=NULL, .lineno=0, .num_children=6, .children=root_c};
 	
-	struct ast* output = parse(tokenize(input));
+	struct token_list* tokens = tokenize(input);
+	struct ast* output = parse(tokens);
+	free_token_list(tokens);
+	free(tokens);
+	fclose(input);
 	if (output == NULL) {
 		fprintf(stderr, "Test failed: parse output null.\n");
 		exit(EXIT_FAILURE);
