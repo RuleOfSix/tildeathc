@@ -25,7 +25,8 @@ target_include_directories(tildeathc_test PRIVATE "${PROJECT_SOURCE_DIR}/include
 										  )
 target_link_libraries(tildeathc_test tokenize_shared parse_shared il_shared)
 
-add_subdirectory(tokenize)
-add_subdirectory(parse)
-add_subdirectory(integration)
 add_subdirectory(il)
+add_subdirectory(integration)
+add_subdirectory(parse)
+add_subdirectory(tokenize)
+add_subdirectory(validation)

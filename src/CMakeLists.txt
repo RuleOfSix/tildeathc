@@ -22,6 +22,12 @@ target_include_directories(il PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
 							  )
 target_link_libraries(il PRIVATE util)
 
+add_library(validate_il STATIC validate_il.c)
+target_include_directories(validate_il PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+									   PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+									   )
+target_link_libraries(validate_il PRIVATE util)
+
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 	add_library(util_shared SHARED util.c)
@@ -45,6 +51,12 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 									     PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
 									     )
 	target_link_libraries(il_shared PRIVATE util_shared)
+
+	add_library(validate_il_shared SHARED validate_il.c)
+	target_include_directories(validate_il_shared PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+												  PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+												  )
+	target_link_libraries(validate_il_shared PRIVATE util_shared)
 
 endif()
 
