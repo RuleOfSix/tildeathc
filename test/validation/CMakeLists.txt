@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.22)
+
+tildeathc_add_test(TARGET_NAME validate_il_undeclared TEST_NAME ValidateILUndeclared SOURCE_FILE validate_il_undeclared.c DEPENDENCIES validate_il_shared REGEX "passed")
+tildeathc_add_test(TARGET_NAME validate_il_normal TEST_NAME ValidateILNormal SOURCE_FILE validate_il_normal.c DEPENDENCIES validate_il_shared)
+tildeathc_add_test(TARGET_NAME validate_il_multiple_declarations TEST_NAME ValidateILMultipleDeclarations SOURCE_FILE validate_il_multiple_declarations.c DEPENDENCIES validate_il_shared)

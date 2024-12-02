@@ -1,7 +1,6 @@
 #include <util.h>
 #include <stdint.h>
 #include <string.h>
-#include <stdlib.h>
 #include <nullcheck.h>
 
 char* util_strdup(const char* str) {
