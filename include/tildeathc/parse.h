@@ -19,14 +19,14 @@ enum ast_node_type {
 	ROOT_NODE,
 };
 
-typedef union ast_node_value {
+union ast_node_value {
 	enum ast_operation op;
 	char* str;
 } ast_node_value;
 
 struct ast {
 	enum ast_node_type type;
-	ast_node_value val;
+	union ast_node_value val;
 	struct ast* children;
 	int64_t num_children;
 	int64_t lineno;
