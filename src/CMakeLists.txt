@@ -60,3 +60,4 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 
 endif()
 
+add_subdirectory(runtime)
