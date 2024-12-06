@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.22)
 
 tildeathc_add_test(TARGET_NAME validate_il_undeclared TEST_NAME ValidateILUndeclared SOURCE_FILE validate_il_undeclared.c DEPENDENCIES validate_il_shared REGEX "passed")
-tildeathc_add_test(TARGET_NAME validate_il_normal TEST_NAME ValidateILNormal SOURCE_FILE validate_il_normal.c DEPENDENCIES validate_il_shared)
+tildeathc_add_test(TARGET_NAME validate_il_one_declaration TEST_NAME ValidateILOneDeclaration SOURCE_FILE validate_il_one_declaration.c DEPENDENCIES validate_il_shared)
 tildeathc_add_test(TARGET_NAME validate_il_multiple_declarations TEST_NAME ValidateILMultipleDeclarations SOURCE_FILE validate_il_multiple_declarations.c DEPENDENCIES validate_il_shared)
+tildeathc_add_test(TARGET_NAME validate_il_bifurcation TEST_NAME ValidateILBifurcation SOURCE_FILE validate_il_bifurcation.c DEPENDENCIES validate_il_shared)
+tildeathc_add_test(TARGET_NAME validate_il_kill_universe TEST_NAME ValidateILKillUniverse SOURCE_FILE validate_il_kill_universe.c DEPENDENCIES validate_il_shared REGEX "Error:.*universe.*line [0-9]*.*")
+tildeathc_add_test(TARGET_NAME validate_il_bifurcate_universe TEST_NAME ValidateILBifurcateUniverse SOURCE_FILE validate_il_bifurcate_universe.c DEPENDENCIES validate_il_shared REGEX "Error:.*universe.*line [0-9]*.*")
+tildeathc_add_test(TARGET_NAME validate_il_overwrite_kill_universe TEST_NAME ValidateILOverwriteKillUniverse SOURCE_FILE validate_il_overwrite_kill_universe.c DEPENDENCIES validate_il_shared REGEX "Error:.*universe.*line [0-9]*.*")
+tildeathc_add_test(TARGET_NAME validate_il_overbifurcate_kill_universe TEST_NAME ValidateILOverbifurcateKillUniverse SOURCE_FILE validate_il_overbifurcate_kill_universe.c DEPENDENCIES validate_il_shared)
