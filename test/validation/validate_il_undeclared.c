@@ -8,7 +8,7 @@ int32_t main(void) {
 								{.type=IL_OP_NODE, .val.op=IL_DIE_OP, .id=1, .lineno=1, .num_children=1, .children= (struct il_node[]) {
 									{.type=IL_VAR_NODE, .val.str="LAMB", .id=2, .lineno=1, .num_children=0, .children=NULL}}}}};
 	struct varlist* vars = NULL;
-	if (validate_il(&input, vars)) {
+	if (validate_il(&input)) {
 		fprintf(stderr, "IL tree containing references to undeclared variables was erroneously validated.\n");
 		exit(EXIT_SUCCESS); //This test is expected to fail, so it must "succeed" on error.
 	} else {
