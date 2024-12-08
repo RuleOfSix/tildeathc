@@ -85,6 +85,10 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 		return true;
 	}
 
+	if (node->type == IL_OP_NODE && node->val.op == IL_DIE_OP && strcmp(node->children[0].val.str, "THIS") == 0) {
+		return true;
+	}
+
 	bool is_valid = true;
 	for (int64_t i = 0; i < node->num_children; i++) {
 		 if (!validate_il_node(node->children + i, vars)) {

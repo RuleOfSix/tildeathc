@@ -8,3 +8,4 @@ tildeathc_add_test(TARGET_NAME validate_il_kill_universe TEST_NAME ValidateILKil
 tildeathc_add_test(TARGET_NAME validate_il_bifurcate_universe TEST_NAME ValidateILBifurcateUniverse SOURCE_FILE validate_il_bifurcate_universe.c DEPENDENCIES validate_il_shared REGEX "Error:.*universe.*line [0-9]*.*")
 tildeathc_add_test(TARGET_NAME validate_il_overwrite_kill_universe TEST_NAME ValidateILOverwriteKillUniverse SOURCE_FILE validate_il_overwrite_kill_universe.c DEPENDENCIES validate_il_shared REGEX "Error:.*universe.*line [0-9]*.*")
 tildeathc_add_test(TARGET_NAME validate_il_overbifurcate_kill_universe TEST_NAME ValidateILOverbifurcateKillUniverse SOURCE_FILE validate_il_overbifurcate_kill_universe.c DEPENDENCIES validate_il_shared)
+tildeathc_add_test(TARGET_NAME validate_il_this_dot_die TEST_NAME ValidateILThisDotDie SOURCE_FILE validate_il_this_dot_die.c DEPENDENCIES validate_il_shared)
