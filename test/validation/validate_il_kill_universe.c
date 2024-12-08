@@ -10,7 +10,6 @@ int32_t main(void) {
 								{.type=IL_OP_NODE, .val.op=IL_DIE_OP, .id=3, .lineno=2, .num_children=1, .children=(struct il_node[]) {
 									{.type=IL_VAR_NODE, .val.str="U1", .id=4, .lineno=2, .num_children=0, .children=NULL}}}}};
 
-	struct varlist* vars = NULL;
 	if (validate_il(&input)) {
 		fprintf(stderr, "IL tree invalidation test when attempting to kill a universe failed.\n");
 		exit(EXIT_SUCCESS); 

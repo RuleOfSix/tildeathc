@@ -16,20 +16,19 @@ struct strarray {
 int32_t process_node(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
 int32_t process_if(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
 int32_t process_block(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_jmp(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_die(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_out(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_lib(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_in(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
+int32_t process_jmp(const struct il_node* node, FILE* output);
+int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* var_table);
+int32_t process_die(const struct il_node* node, FILE* output, struct strarray* var_table);
+int32_t process_out(const struct il_node* node, FILE* output, struct strarray* strings);
+int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* var_table);
+int32_t process_lib(const struct il_node* node);
+int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* var_table);
+int32_t process_in(const struct il_node* node, FILE* output, struct strarray* var_table);
 int64_t declare_var(char* varname, FILE* output, struct strarray* var_table);
 int32_t get_var_table(const struct il_node* il, struct strarray* output);
 int64_t get_offset(char* varname, struct strarray* var_table);
 int32_t get_strings(const struct il_node* il, struct strarray* output);
 char* get_strlabel(char* str, struct strarray* strings);
-int64_t get_label();
 char* format_label(int64_t num, char* prefix);
 
 int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output) {
@@ -104,28 +103,28 @@ int32_t process_node(const struct il_node* node, FILE* output, struct strarray* 
 			status = process_block(node, output, strings, var_table);
 			break;
 		case IL_JMP_OP:
-			status = process_jmp(node, output, strings, var_table);
+			status = process_jmp(node, output);
 			break;
 		case IL_BIF_OP:
-			status = process_bif(node, output, strings, var_table);
+			status = process_bif(node, output, var_table);
 			break;
 		case IL_DIE_OP:
-			status = process_die(node, output, strings, var_table);
+			status = process_die(node, output, var_table);
 			break;
 		case IL_OUT_OP:
-			status = process_out(node, output, strings, var_table);
+			status = process_out(node, output, strings);
 			break;
 		case IL_ABS_OP:
-			status = process_abs(node, output, strings, var_table);
+			status = process_abs(node, output, var_table);
 			break;
 		case IL_LIB_OP:
-			status = process_lib(node, output, strings, var_table);
+			status = process_lib(node);
 			break;
 		case IL_UNI_OP:
-			status = process_uni(node, output, strings, var_table);
+			status = process_uni(node, output, var_table);
 			break;
 		case IL_IN_OP:
-			status = process_in(node, output, strings, var_table);
+			status = process_in(node, output, var_table);
 			break;
 	}
 	return status;
@@ -165,14 +164,14 @@ int32_t process_block(const struct il_node* node, FILE* output, struct strarray*
 }
 
 
-int32_t process_jmp(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_jmp(const struct il_node* node, FILE* output) {
 	char* target_label = format_label(node->children[0].val.tar, "L");
 	fprintf(output, "\tjmp\t%s\n", target_label);
 	free(target_label);
 	return 0;
 }
 
-int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* var_table) {
 	int64_t source_offset = get_offset(node->children[0].val.str, var_table);
 	int64_t left_offset = declare_var(node->children[1].val.str, output, var_table);
 	int64_t right_offset = declare_var(node->children[2].val.str, output, var_table);
@@ -192,14 +191,14 @@ int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* s
 	return 0;
 }
 
-int32_t process_out(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_out(const struct il_node* node, FILE* output, struct strarray* strings) {
 	char* str_label = get_strlabel(node->children[0].val.str, strings);
 	fprintf(output, "\tleaq\t%s(%%rip), %%rdi\n", str_label);
 	fprintf(output, "\tcall\tprintf@PLT\n");
 	return 0;
 }
 
-int32_t process_die(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_die(const struct il_node* node, FILE* output, struct strarray* var_table) {
 	if (strcmp(node->children[0].val.str, "THIS") == 0) {
 		fprintf(output, "\tmovl\t$0, %%eax\n");
 		fprintf(output, "\tleave\n");
@@ -212,7 +211,7 @@ int32_t process_die(const struct il_node* node, FILE* output, struct strarray* s
 	return 0;
 }
 
-int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* var_table) {
 	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table);
 	fprintf(output, "\tmovl\t$0, %%edi\n");
 	fprintf(output, "\tcall\tcreate_object@PLT\n");
@@ -220,12 +219,12 @@ int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* s
 	return 0;
 }
 
-int32_t process_lib(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_lib(const struct il_node* node) {
 	fprintf(stderr, "Libraries not yet implemented, ignoring import on line %ld\n", node->lineno);
 	return 0;
 }
 
-int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* var_table) {
 	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table);
 	fprintf(output, "\tmovl\t$1, %%edi\n");
 	fprintf(output, "\tcall\tcreate_object@PLT\n");
@@ -234,7 +233,7 @@ int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* s
 
 }
 
-int32_t process_in(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_in(const struct il_node* node, FILE* output, struct strarray* var_table) {
 	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table);
 	fprintf(output, "\tmovl\t$2, %%edi\n");
 	fprintf(output, "\tcall\tcreate_object@PLT\n");

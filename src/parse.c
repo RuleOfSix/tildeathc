@@ -132,21 +132,21 @@ int64_t bifurcate(struct ast* parent, const struct token_list* tokens, int64_t s
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	cur_token += variable(this_node, tokens, cur_token);	
-	ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "[", tokens->tokens[cur_token].lineno);
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 	
 	cur_token += variable(this_node, tokens, cur_token);	
-	ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ",", tokens->tokens[cur_token].lineno);
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	cur_token += variable(this_node, tokens, cur_token);	
-	ASSERT_TOKEN_IN_BOUNDS(start_token + 1, tokens);
+	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
 	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, "]", tokens->tokens[cur_token].lineno);
 	cur_token++;

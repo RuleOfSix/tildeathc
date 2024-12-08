@@ -21,7 +21,7 @@ enum bit_width {
 	B64
 };
 
-enum cpu_register allocate_register();
+enum cpu_register allocate_register(void);
 int32_t free_register(enum cpu_register reg);
 char* register_name(enum cpu_register reg, enum bit_width width);
 
