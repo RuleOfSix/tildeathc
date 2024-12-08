@@ -6,7 +6,7 @@
 
 bool register_array[NUM_REGISTERS] = {0};
 
-enum cpu_register allocate_register() {
+enum cpu_register allocate_register(void) {
 	for (int32_t i = 0; i < NUM_REGISTERS; i++) {
 		if (register_array[i] == false) {
 			register_array[i] = true;
@@ -44,4 +44,5 @@ char* register_name(enum cpu_register reg, enum bit_width width) {
 		case ENOREGS:
 			return NULL;
 	}
+	return NULL;
 }

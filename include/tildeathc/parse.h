@@ -22,7 +22,7 @@ enum ast_node_type {
 union ast_node_value {
 	enum ast_operation op;
 	char* str;
-} ast_node_value;
+};
 
 struct ast {
 	enum ast_node_type type;

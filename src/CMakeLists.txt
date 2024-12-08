@@ -37,9 +37,15 @@ target_link_libraries(registers PRIVATE util)
 
 add_library(tildeathc_codegen STATIC codegen.c)
 target_include_directories(tildeathc_codegen PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
-								   PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
-								   )
+											 PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+											 )
 target_link_libraries(tildeathc_codegen PRIVATE registers)
+
+add_executable(tildeathc tildeathc.c)
+target_include_directories(tildeathc PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+									 PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+									 )
+target_link_libraries(tildeathc PRIVATE tokenize parse il validate_il tildeathc_codegen)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 	add_library(util_shared SHARED util.c)

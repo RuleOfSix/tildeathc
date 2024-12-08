@@ -16,7 +16,6 @@ int32_t main(void) {
 								{.type=IL_OP_NODE, .val.op=IL_DIE_OP, .id=9, .lineno=3, .num_children=1, .children=(struct il_node[]) {
 									{.type=IL_VAR_NODE, .val.str="HALF2", .id=10, .lineno=3, .num_children=0, .children=NULL}}}}};
 
-	struct varlist* vars = NULL;
 	if (validate_il(&input)) {
 		fprintf(stderr, "IL tree validation with bifurcation test successful.\n");
 		exit(EXIT_SUCCESS); 
