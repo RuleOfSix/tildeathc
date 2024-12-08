@@ -154,8 +154,8 @@ void convert_bifurcate_node(const struct ast* node, struct il_node* output) {
 	output->children = malloc(output->num_children * sizeof(*(output->children)));
 	MALLOC_NULL_CHECK(output->children);
 	convert_var_node(node->children, output->children);
-	convert_abstract_node(node->children + 1, output->children + 1);
-	convert_abstract_node(node->children + 2, output->children + 2);
+	convert_declaration_node(node->children + 1, output->children + 1);
+	convert_declaration_node(node->children + 2, output->children + 2);
 }
 
 void convert_die_node(const struct ast* node, struct il_node* output) {

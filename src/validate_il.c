@@ -62,18 +62,10 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 			fprintf(stderr, "Error: variable name %s used prior to declaration on line %ld.\n", node->val.str, node->lineno);
 			return false;
 		}
-		switch(vars->type_list[base_index]) {
-			case UNIVERSE:
-				fprintf(stderr, "Error: attempt to bifurcate a universe object on line %ld.\n", node->lineno);
-				return false;
-				break;
-			case INPUT:
-				node->children[1].val.op = IL_IN_OP;
-				node->children[2].val.op = IL_IN_OP;
-
-		}
 		if (vars->type_list[base_index] == UNIVERSE) {
-					}
+			fprintf(stderr, "Error: attempt to bifurcate a universe object on line %ld.\n", node->lineno);
+			return false;
+		}
 		for (int32_t i = 1; i < 3; i++) {
 			int64_t var_index = varlist_index(node->children[i].val.str, vars);
 			if (var_index == -1) {
