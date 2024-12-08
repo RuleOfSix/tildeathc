@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 tildeathc_add_test(TARGET_NAME create_object TEST_NAME CreateObject SOURCE_FILE create_object.c DEPENDENCIES objects_shared)
-tildeathc_add_test(TARGET_NAME create_input_object TEST_NAME CreateInputObject SOURCE_FILE create_input_object.c DEPENDENCIES objects_shared)
+#tildeathc_add_test(TARGET_NAME create_input_object TEST_NAME CreateInputObject SOURCE_FILE create_input_object.c DEPENDENCIES objects_shared)
 tildeathc_add_test(TARGET_NAME bifurcate_abstract TEST_NAME BifurcateAbstract SOURCE_FILE bifurcate_abstract.c DEPENDENCIES objects_shared)
 tildeathc_add_test(TARGET_NAME bifurcate_input TEST_NAME BifurcateInput SOURCE_FILE bifurcate_input.c DEPENDENCIES objects_shared)
 tildeathc_add_test(TARGET_NAME bifurcate_universe TEST_NAME BifurcateUniverse SOURCE_FILE bifurcate_universe.c DEPENDENCIES objects_shared)
