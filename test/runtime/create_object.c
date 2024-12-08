@@ -5,7 +5,7 @@
 
 int main(void) {
 	for (uint32_t i = 0; i < 2; i++) {
-		struct tildeath_object* obj = create_object((enum tildeath_object_type) i, NULL);	
+		struct tildeath_object* obj = create_object((enum tildeath_object_type) i);	
 		if (obj == NULL) {
 			fprintf(stderr, "Error: object creation returned null pointer.\n");
 			exit(EXIT_FAILURE);

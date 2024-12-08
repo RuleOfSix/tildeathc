@@ -4,23 +4,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-int32_t free_object(struct tildeath_object* object);
-
 struct tildeath_object universal_dead = {.type=ABSTRACT, .state=DEAD, .halves.left=&universal_dead, .halves.right=&universal_dead};
 
 
-struct tildeath_object* create_object(enum tildeath_object_type type, char* input_text) {
+struct tildeath_object* create_object(enum tildeath_object_type type) {
 	if (type == INPUT) {
 		struct tildeath_input_object* output = malloc(sizeof(*output));
 		MALLOC_NULL_CHECK(output);
-		int32_t text_length = strlen(input_text);
-		char* output_text = util_strdup(input_text);
+
+		int text_capacity = 10;
+		char* input_text = malloc(sizeof(*input_text) * text_capacity);
+		MALLOC_NULL_CHECK(input_text);
+		int text_length = 0;
+		for (char c = getc(stdin); c == '1' || c == '0'; c = getc(stdin)) {
+			if (text_length + 1 >= text_capacity) {
+				text_capacity *= 2;
+				input_text = realloc(input_text, sizeof(*input_text) * text_capacity);
+				MALLOC_NULL_CHECK(input_text);
+			}
+			input_text[text_length] = c;
+			text_length++;
+		}
+
 		*output = (struct tildeath_input_object){.type=type, 
 												 .state=ALIVE,
 												 .halves.left=NULL,
 												 .halves.right=NULL,
 												 .input_length=text_length,
-												 .input_text=output_text};
+												 .input_text=input_text};
 		return (struct tildeath_object*) output;
 	} else {
 		struct tildeath_object* output = malloc(sizeof(*output));

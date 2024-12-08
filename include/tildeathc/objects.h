@@ -35,8 +35,9 @@ struct tildeath_input_object {
 };
 
 
-struct tildeath_object* create_object(enum tildeath_object_type type, char* input_text);
+struct tildeath_object* create_object(enum tildeath_object_type type);
 struct tildeath_object_halves* bifurcate(struct tildeath_object* object);
 int32_t kill(struct tildeath_object* object);
+int32_t free_object(struct tildeath_object* object);
 
 #endif

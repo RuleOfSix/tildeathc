@@ -28,6 +28,18 @@ target_include_directories(validate_il PRIVATE "${PROJECT_SOURCE_DIR}/include/ti
 									   )
 target_link_libraries(validate_il PRIVATE util)
 
+add_library(registers STATIC registers.c)
+target_include_directories(registers PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+									 PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+								     )
+target_link_libraries(registers PRIVATE util)
+
+
+add_library(tildeathc_codegen STATIC codegen.c)
+target_include_directories(tildeathc_codegen PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+								   PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+								   )
+target_link_libraries(tildeathc_codegen PRIVATE registers)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 	add_library(util_shared SHARED util.c)
@@ -57,6 +69,19 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 												  PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
 												  )
 	target_link_libraries(validate_il_shared PRIVATE util_shared)
+
+	add_library(registers_shared SHARED registers.c)
+	target_include_directories(registers_shared PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+												PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+												)
+	target_link_libraries(registers_shared PRIVATE util_shared)
+
+
+	add_library(tildeathc_codegen_shared SHARED codegen.c)
+	target_include_directories(tildeathc_codegen_shared PRIVATE "${PROJECT_SOURCE_DIR}/include/tildeathc"
+											  PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
+											  )
+	target_link_libraries(tildeathc_codegen_shared PRIVATE registers_shared)
 
 endif()
 

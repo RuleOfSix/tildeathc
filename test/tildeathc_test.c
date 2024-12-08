@@ -1,13 +1,18 @@
+#include <project_info.h>
 #include <tildeathc_test.h>
 #include <nullcheck.h>
 #include <tokenize.h>
 #include <parse.h>
 #include <il.h>
+#include <codegen.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 
 
@@ -75,6 +80,108 @@ void il_test(const struct ast* input, const struct il_node* expected, bool shoul
 	}
 	free_il_tree(output);
 	free(output);
+}
+
+void codegen_test(const struct il_node* input, char* expected, bool should_fail) {
+	ASSERT_NOT_NULL(input);
+	if (!should_fail) {
+		ASSERT_NOT_NULL(expected);
+	}
+	errno = 0;
+	char asm_filename[] = "/tmp/tildeathc_XXXXXX.s";
+	int asm_file_fd = mkstemps(asm_filename, 2);
+	if (asm_file_fd == -1) {
+		perror("Temporary file creation failed");
+		exit(!should_fail);
+	}
+	FILE* asm_file = fdopen(asm_file_fd, "w");
+	if (asm_file == NULL) {
+		perror("Opening file stream from temp file failed");
+		unlink(asm_filename);
+		exit(!should_fail);
+	}
+	generate_assembly(input, "Test.~ATH", asm_file);
+	fclose(asm_file);
+
+	char bin_filename[] = "/tmp/tildeathc_XXXXXX";
+	errno = 0;
+	int unused_fd = mkstemp(bin_filename);
+	if (unused_fd == -1) {
+		perror("Temporary file creation failed");
+		exit(!should_fail);
+	}
+	close(unused_fd);
+	errno = 0;
+	int32_t pid = fork();
+	if (pid < 0) {
+		perror("Error attempting to fork process");
+		exit(!should_fail);
+	} else if (pid == 0) {
+		errno = 0;
+		execlp("gcc", "gcc", asm_filename, "-L" RUNTIME_LIB_DIR, "-L" SRC_LIB_DIR, "-lobjects", "-lutil", "-o", bin_filename, (char*) NULL);
+		if (errno == 0) { 
+			fprintf(stderr, "Execlp call for gcc failed.\n");
+		} else {
+			perror("Execlp failure for gcc");
+		}
+		unlink(asm_filename);
+		unlink(bin_filename);
+		exit(!should_fail);
+	} 
+	int status = 0;
+	errno = 0;
+	if (waitpid(pid, &status, 0) != pid) {
+		if (errno == 0) {
+			fprintf(stderr, "Unknown waitpid error.\n");
+		} else {
+			perror("Waitpid error");
+		}
+		unlink(asm_filename);
+		unlink(bin_filename);
+		exit(!should_fail);
+	}
+	if (status != 0) {
+		fprintf(stderr, "Error: gcc exited with status code %d\n", status);
+		fprintf(stderr, "Assembly file stored at %s for inspection.\n", asm_filename);
+		unlink(bin_filename);
+		exit(!should_fail);
+	}
+	
+	errno = 0;
+	FILE* program_output = popen(bin_filename, "r");
+	if (program_output == NULL) {
+		if (errno == 0) {
+			fprintf(stderr, "Popen error: Memory allocation failure attempting to execute generated binary.\n");
+		} else {
+			perror("Popen error executing generated binary");
+		}
+		unlink(asm_filename);
+		unlink(bin_filename);
+		exit(!should_fail);
+	}
+	char* program_output_line = NULL;
+	size_t program_output_line_size = 0;
+	int32_t i = 1;
+	for (char* expected_line = strtok(expected, "\n"); expected_line != NULL; expected_line = strtok(NULL, "\n")) {
+		getline(&program_output_line, &program_output_line_size, program_output);
+		program_output_line[strlen(program_output_line) - 1] = '\0';
+		fprintf(stderr, "\tExpected: %s\n", expected_line);
+		fprintf(stderr, "\tActual: %s\n", program_output_line);
+		if (strcmp(program_output_line, expected_line) != 0) {
+			fprintf(stderr, "Error: program output line %d does not match what was expected.\n", i);
+			fprintf(stderr, "Assembly file stored at %s for inspection.\n", asm_filename);
+			unlink(bin_filename);
+			exit(!should_fail);
+		}
+		i++;
+	}
+
+	printf("Code generation test passed.\n");
+
+	unlink(asm_filename);
+	unlink(bin_filename);
+	pclose(program_output);
+	exit(should_fail);
 }
 
 bool compare_token_list(const struct token_list* expected, const struct token_list* actual) {
