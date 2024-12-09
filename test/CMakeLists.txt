@@ -32,3 +32,5 @@ add_subdirectory(validation)
 add_subdirectory(runtime)
 add_subdirectory(codegen)
 add_subdirectory(integration)
+
+add_subdirectory(scripts)
