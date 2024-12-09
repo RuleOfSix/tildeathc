@@ -13,13 +13,13 @@ struct strarray {
 	int64_t cap;
 };
 
-int32_t process_node(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_if(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
-int32_t process_block(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table);
+int32_t process_node(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table);
+int32_t process_if(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table);
+int32_t process_block(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table);
 int32_t process_jmp(const struct il_node* node, FILE* output);
 int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* var_table);
 int32_t process_die(const struct il_node* node, FILE* output, struct strarray* var_table);
-int32_t process_out(const struct il_node* node, FILE* output, struct strarray* strings);
+int32_t process_out(const struct il_node* node, FILE* output, const struct strarray* strings);
 int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* var_table);
 int32_t process_lib(const struct il_node* node);
 int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* var_table);
@@ -28,7 +28,7 @@ int64_t declare_var(char* varname, FILE* output, struct strarray* var_table);
 int32_t get_var_table(const struct il_node* il, struct strarray* output);
 int64_t get_offset(char* varname, struct strarray* var_table);
 int32_t get_strings(const struct il_node* il, struct strarray* output);
-char* get_strlabel(char* str, struct strarray* strings);
+char* get_strlabel(char* str, const struct strarray* strings);
 char* format_label(int64_t num, char* prefix);
 
 int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output) {
@@ -60,6 +60,7 @@ int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output
 		fprintf(stderr, "Internal Error: unknown problem while building variable table from il tree.\n");
 		exit(EXIT_FAILURE);
 	}
+	fprintf(stderr, "%ld\n", var_table.len);
 
 	fprintf(output, "\t.file\t\"%s\"\n", filename);	
 	if (strings.len > 0) {
@@ -78,6 +79,12 @@ int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output
 	fprintf(output, "\tmovq\t%%rsp, %%rbp\n");
 	fprintf(output, "\tsubq\t$%ld, %%rsp\n", var_table.len > 1 ? 8 * var_table.len : 16);
 
+	var_table.cap = 2;
+	free(var_table.array); 
+	var_table.array = malloc(sizeof(*(var_table.array)) * var_table.cap);
+	MALLOC_NULL_CHECK(var_table.array);
+ 	var_table.len = 0;
+
 	for (int64_t i = 0; i < il->num_children; i++) {
 		if (process_node(il->children + i, output, &strings, &var_table) == 1) {
 			return 1;
@@ -87,7 +94,7 @@ int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output
 	return 0;
 }
 
-int32_t process_node(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_node(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table) {
 	if (node->type != IL_OP_NODE) {
 		return 1;
 	}
@@ -130,7 +137,7 @@ int32_t process_node(const struct il_node* node, FILE* output, struct strarray* 
 	return status;
 }
 
-int32_t process_if(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_if(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table) {
 	int64_t var_offset = get_offset(node->children[0].val.str, var_table);
 	enum cpu_register reg1 = allocate_register();
 	enum cpu_register reg2 = allocate_register();
@@ -155,7 +162,7 @@ int32_t process_if(const struct il_node* node, FILE* output, struct strarray* st
 }
 
 
-int32_t process_block(const struct il_node* node, FILE* output, struct strarray* strings, struct strarray* var_table) {
+int32_t process_block(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table) {
 	int32_t status = 0;
 	for (int64_t i = 0; i < node->num_children; i++) { 
 		status = status || process_node(node->children + i, output, strings, var_table);
@@ -191,9 +198,13 @@ int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* v
 	return 0;
 }
 
-int32_t process_out(const struct il_node* node, FILE* output, struct strarray* strings) {
+int32_t process_out(const struct il_node* node, FILE* output, const struct strarray* strings) {
 	char* str_label = get_strlabel(node->children[0].val.str, strings);
+	if (str_label == NULL) {
+		fprintf(stderr, "Compiler error: unable to locate string %s", node->children[0].val.str);
+	}
 	fprintf(output, "\tleaq\t%s(%%rip), %%rdi\n", str_label);
+	fprintf(output, "\tmovl\t$0, %%eax\n"); // ax stores # of vector registers used for arguments to variadic functions, so this is needed to prevent segfaults.
 	fprintf(output, "\tcall\tprintf@PLT\n");
 	return 0;
 }
@@ -271,8 +282,8 @@ int32_t get_var_table(const struct il_node* il, struct strarray* output) {
 		MALLOC_NULL_CHECK(output->array);
 	}
 
-	if (il->type == IL_DEC_NODE && get_offset(il->val.str, output) == -1) {
-		if (output->len == output->cap) {
+	if (il->type == IL_DEC_NODE && get_offset(il->val.str, output) == 0) {
+		if (output->len >= output->cap) {
 			output->cap *= 2;
 			output->array= realloc(output->array, sizeof(*(output->array)) * output->cap);
 			MALLOC_NULL_CHECK(output->array);
@@ -314,7 +325,7 @@ int32_t get_strings(const struct il_node* il, struct strarray* output) {
 	}
 
 	if (il->type == IL_STR_NODE) {
-		if (output->len == output->cap) {
+		if (output->len >= output->cap) {
 			output->cap *= 2;
 			output->array = realloc(output->array, sizeof(*(output->array)) * output->cap);
 			MALLOC_NULL_CHECK(output->array);
@@ -333,7 +344,7 @@ int32_t get_strings(const struct il_node* il, struct strarray* output) {
 	return 0;
 }
 
-char* get_strlabel(char* str, struct strarray* strings) {
+char* get_strlabel(char* str, const struct strarray* strings) {
 	for (int64_t i = 0; i < strings->len; i++) {
 		if (strcmp(strings->array[i], str) == 0) {
 			return format_label(i, "LS");
