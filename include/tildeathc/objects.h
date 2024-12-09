@@ -24,12 +24,14 @@ struct tildeath_object {
 	enum tildeath_object_type type;
 	enum tildeath_object_state state;
 	struct tildeath_object_halves halves;
+	int32_t refcount;
 };
 
 struct tildeath_input_object {
 	enum tildeath_object_type type;
 	enum tildeath_object_state state;
 	struct tildeath_object_halves halves;
+	int32_t refcount;
 	int input_length;
 	char* input_text;
 };
