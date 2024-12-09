@@ -33,9 +33,9 @@ union il_node_value {
 };
 
 struct il_node {
-	int64_t id;
 	enum il_node_type type;
 	union il_node_value val;
+	int64_t id;
 	int64_t lineno;
 	int64_t num_children;
 	struct il_node* children;
