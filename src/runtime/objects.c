@@ -30,6 +30,7 @@ struct tildeath_object* create_object(enum tildeath_object_type type) {
 												 .state=ALIVE,
 												 .halves.left=NULL,
 												 .halves.right=NULL,
+												 .refcount=1,
 												 .input_length=text_length,
 												 .input_text=input_text};
 		return (struct tildeath_object*) output;
@@ -39,7 +40,8 @@ struct tildeath_object* create_object(enum tildeath_object_type type) {
 		*output = (struct tildeath_object){.type=type, 
 										   .state=ALIVE, 
 										   .halves.left=NULL, 
-										   .halves.right=NULL};
+										   .halves.right=NULL, 
+										   .refcount=1};
 		return output;
 	}
 }
@@ -52,20 +54,20 @@ struct tildeath_object_halves* bifurcate(struct tildeath_object* object) {
 		return NULL;
 	}
 	if (object->halves.left != NULL && object->halves.right != NULL) {
-		struct tildeath_object_halves* output = malloc(sizeof(*output));
-		memcpy(output, &(object->halves), sizeof(*output));
-		return output;
+		return &(object->halves);
 	} else if(object->halves.left != NULL || object->halves.right != NULL) {
-		fprintf(stderr, "Error: malformed tree data.\n");
+		fprintf(stderr, "~ATH Runtime Error: Cannot bifurcate malformed object.\n");
 		exit(EXIT_FAILURE);
 	} else {
 		if (object->type == INPUT) {
-			object->halves.left = malloc(sizeof(struct tildeath_input_object));
+			object->halves.left = malloc(sizeof(struct tildeath_object));
 			MALLOC_NULL_CHECK(object->halves.left);
 			*(object->halves.left) = (struct tildeath_object){.type=INPUT,
 													   .state=ALIVE,
 													   .halves.left=NULL,
-													   .halves.right=NULL};
+													   .halves.right=NULL,
+													   .refcount=2};
+																
 			if (((struct tildeath_input_object*)object)->input_text[0] == '0') {
 				object->halves.left->state = DEAD;
 			}
@@ -75,7 +77,8 @@ struct tildeath_object_halves* bifurcate(struct tildeath_object* object) {
 			*(object->halves.right) = (struct tildeath_object){.type=INPUT,
 													   .state=ALIVE,
 													   .halves.left=NULL,
-													   .halves.right=NULL};
+													   .halves.right=NULL,
+													   .refcount=2};
 			((struct tildeath_input_object*)object->halves.right)->input_length = ((struct tildeath_input_object*)object)->input_length - 1;
 			((struct tildeath_input_object*)object->halves.right)->input_text = util_strdup(((struct tildeath_input_object*)object)->input_text + 1);
 			if (((struct tildeath_input_object*)object->halves.right)->input_length == 0) {
@@ -87,7 +90,8 @@ struct tildeath_object_halves* bifurcate(struct tildeath_object* object) {
 			*(object->halves.left) = (struct tildeath_object){.type=ABSTRACT,
 															  .state=ALIVE,
 															  .halves.left=NULL,
-															  .halves.right=NULL};
+															  .halves.right=NULL,
+															  .refcount=2};
 
 
 			object->halves.right = malloc(sizeof(*(object->halves.right)));
@@ -95,7 +99,8 @@ struct tildeath_object_halves* bifurcate(struct tildeath_object* object) {
 			*(object->halves.right) = (struct tildeath_object){.type=ABSTRACT,
 															   .state=ALIVE,
 															   .halves.left=NULL,
-															   .halves.right=NULL};
+															   .halves.right=NULL,
+															   .refcount=2};
 
 		}
 		return &(object->halves);
@@ -118,6 +123,9 @@ int32_t kill(struct tildeath_object* object) {
 
 int32_t free_object(struct tildeath_object* object) {
 	if (object == &universal_dead || object == NULL) {
+		return 1;
+	}
+	if (--(object->refcount) > 0) {
 		return 1;
 	}
 	if (object->type == INPUT) {

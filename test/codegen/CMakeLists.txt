@@ -2,3 +2,4 @@ cmake_minimum_required(VERSION 3.22)
 
 tildeathc_add_test(TARGET_NAME hello_world_codegen TEST_NAME HelloWorldCodegen SOURCE_FILE hello_world_codegen.c)
 tildeathc_add_test(TARGET_NAME bif_kill_codegen TEST_NAME BifKillCodegen SOURCE_FILE bif_kill_codegen.c)
+tildeathc_add_test(TARGET_NAME bif_overwrite_self_codegen TEST_NAME BifOverwriteSelfCodegen SOURCE_FILE bif_overwrite_self_codegen.c)

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 
 struct strarray {
@@ -24,7 +25,7 @@ int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* v
 int32_t process_lib(const struct il_node* node);
 int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* var_table);
 int32_t process_in(const struct il_node* node, FILE* output, struct strarray* var_table);
-int64_t declare_var(char* varname, FILE* output, struct strarray* var_table);
+int64_t declare_var(char* varname, FILE* output, struct strarray* var_table, int64_t guard_offset);
 int32_t get_var_table(const struct il_node* il, struct strarray* output);
 int64_t get_offset(char* varname, struct strarray* var_table);
 int32_t get_strings(const struct il_node* il, struct strarray* output);
@@ -60,7 +61,6 @@ int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output
 		fprintf(stderr, "Internal Error: unknown problem while building variable table from il tree.\n");
 		exit(EXIT_FAILURE);
 	}
-	fprintf(stderr, "%ld\n", var_table.len);
 
 	fprintf(output, "\t.file\t\"%s\"\n", filename);	
 	if (strings.len > 0) {
@@ -180,17 +180,28 @@ int32_t process_jmp(const struct il_node* node, FILE* output) {
 
 int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* var_table) {
 	int64_t source_offset = get_offset(node->children[0].val.str, var_table);
-	int64_t left_offset = declare_var(node->children[1].val.str, output, var_table);
-	int64_t right_offset = declare_var(node->children[2].val.str, output, var_table);
+	int64_t left_offset = declare_var(node->children[1].val.str, output, var_table, source_offset);
+	int64_t right_offset = declare_var(node->children[2].val.str, output, var_table, source_offset);
+
+	bool free_source = left_offset == source_offset || right_offset == source_offset;
+
+	fprintf(output, "\tmovq\t%ld(%%rbp), %%rdi\n", source_offset);
+	if (free_source) {
+		fprintf(output, "\tpushq\t%%rdi\n");
+	}
+	fprintf(output, "\tcall\tbifurcate@PLT\n");
 	enum cpu_register reg = allocate_register();
 	char* reg_str = register_name(reg, B64);
 
-	fprintf(output, "\tmovq\t%ld(%%rbp), %%rdi\n", source_offset);
-	fprintf(output, "\tcall\tbifurcate@PLT\n");
 	fprintf(output, "\tmovq\t(%%rax), %s\n", reg_str);
 	fprintf(output, "\tmovq\t%s, %ld(%%rbp)\n", reg_str, left_offset);
 	fprintf(output, "\tmovq\t8(%%rax), %s\n", reg_str);
 	fprintf(output, "\tmovq\t%s, %ld(%%rbp)\n", reg_str, right_offset);
+
+	if (free_source) {
+		fprintf(output, "\tpopq\t%%rdi\n");
+		fprintf(output, "\tcall\tfree_object@PLT\n");
+	}
 
 	free(reg_str);
 	free_register(reg);
@@ -223,7 +234,7 @@ int32_t process_die(const struct il_node* node, FILE* output, struct strarray* v
 }
 
 int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* var_table) {
-	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table);
+	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table, 0);
 	fprintf(output, "\tmovl\t$0, %%edi\n");
 	fprintf(output, "\tcall\tcreate_object@PLT\n");
 	fprintf(output, "\tmovq\t%%rax, %ld(%%rbp)\n", var_offset);
@@ -236,7 +247,7 @@ int32_t process_lib(const struct il_node* node) {
 }
 
 int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* var_table) {
-	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table);
+	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table, 0);
 	fprintf(output, "\tmovl\t$1, %%edi\n");
 	fprintf(output, "\tcall\tcreate_object@PLT\n");
 	fprintf(output, "\tmovq\t%%rax, %ld(%%rbp)\n", var_offset);
@@ -245,7 +256,7 @@ int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* v
 }
 
 int32_t process_in(const struct il_node* node, FILE* output, struct strarray* var_table) {
-	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table);
+	int64_t var_offset = declare_var(node->children[0].val.str, output, var_table, 0);
 	fprintf(output, "\tmovl\t$2, %%edi\n");
 	fprintf(output, "\tcall\tcreate_object@PLT\n");
 	fprintf(output, "\tmovq\t%%rax, %ld(%%rbp)\n", var_offset);
@@ -253,9 +264,12 @@ int32_t process_in(const struct il_node* node, FILE* output, struct strarray* va
 
 }
 
-int64_t declare_var(char* varname, FILE* output, struct strarray* var_table) {
+int64_t declare_var(char* varname, FILE* output, struct strarray* var_table, int64_t guard_offset) {
 	int64_t offset = get_offset(varname, var_table);
 	if (offset != 0) {
+		if (offset == guard_offset) {
+			return offset;
+		}
 		fprintf(output, "\tmovq\t%ld(%%rbp), %%rdi\n", offset);
 		fprintf(output, "\tcall\tfree_object@PLT\n");
 	} else {
