@@ -10,12 +10,13 @@
 
 int32_t main(void) {
 	struct token input_tokens[] = {
-		{"import", 1},
-		{"abstract", 1},
 		{"NULL", 1},
+		{".DIE", 1},
+		{"(", 1},
+		{")", 1},
 		{";", 1},
 	};
-	struct token_list input = {input_tokens, 4};
+	struct token_list input = {input_tokens, 5};
 
 	parse_test(&input, NULL, true);	
 	return 0;

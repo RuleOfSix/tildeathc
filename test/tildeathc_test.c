@@ -87,30 +87,47 @@ void codegen_test(const struct il_node* input, char* expected, bool should_fail)
 	if (!should_fail) {
 		ASSERT_NOT_NULL(expected);
 	}
+
 	errno = 0;
 	char asm_filename[] = "/tmp/tildeathc_XXXXXX.s";
 	int asm_file_fd = mkstemps(asm_filename, 2);
 	if (asm_file_fd == -1) {
-		perror("Temporary file creation failed");
+		fprintf(stderr, "Temporary file %s creation failed: %s\n", asm_filename, strerror(errno));
 		exit(!should_fail);
 	}
+
+	errno = 0;
 	FILE* asm_file = fdopen(asm_file_fd, "w");
 	if (asm_file == NULL) {
-		perror("Opening file stream from temp file failed");
+		fprintf(stderr, "Opening %s file stream failed: %s\n", asm_filename, strerror(errno));
 		unlink(asm_filename);
 		exit(!should_fail);
 	}
-	generate_assembly(input, "Test.~ATH", asm_file);
-	fclose(asm_file);
+
+	if (generate_assembly(input, "Test.~ATH", asm_file) == 1) {
+		fprintf(stderr, "Assembly generation failed.\n");
+		exit(!should_fail);
+	}
+
+	errno = 0;
+	if (fclose(asm_file) == EOF) {
+		fprintf(stderr, "Error: Failed to close file %s: %s\n", asm_filename, strerror(errno));
+		exit(!should_fail);
+	}
 
 	char bin_filename[] = "/tmp/tildeathc_XXXXXX";
 	errno = 0;
 	int unused_fd = mkstemp(bin_filename);
 	if (unused_fd == -1) {
-		perror("Temporary file creation failed");
+		fprintf(stderr, "Temporary file %s creation failed: %s\n", bin_filename, strerror(errno));
 		exit(!should_fail);
 	}
-	close(unused_fd);
+
+	errno = 0;
+	if (close(unused_fd) == -1) {
+		fprintf(stderr, "Warning: Failed to close unused file descripter for %s: %s\n", bin_filename, strerror(errno));
+	}
+
 	errno = 0;
 	int32_t pid = fork();
 	if (pid < 0) {

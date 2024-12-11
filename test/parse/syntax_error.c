@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-int32_t main() {
+int32_t main(void) {
 	struct token input_tokens[] = {
 		{"~ATH", 1},
 		{"{", 1},

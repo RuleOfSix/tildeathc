@@ -27,9 +27,9 @@ union ast_node_value {
 struct ast {
 	enum ast_node_type type;
 	union ast_node_value val;
-	struct ast* children;
-	int64_t num_children;
 	int64_t lineno;
+	int64_t num_children;
+	struct ast* children;
 };
 
 #define LOOKUP_OPERATION(operation) ((operation) == LOOP_OP ? "LOOP_OP" : (\

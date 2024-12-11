@@ -9,6 +9,12 @@
 #include <string.h>
 #include <ctype.h>
 
+enum var_status {
+	VALID_VARNAME,
+	INVALID_VARNAME,
+	UNRECOGNIZED_TOKEN
+};
+
 int64_t grave(struct ast* parent, const struct token_list* tokens, int64_t start_token);
 int64_t loop(struct ast* parent, const struct token_list* tokens, int64_t start_token);
 int64_t bifurcate(struct ast* parent, const struct token_list* tokens, int64_t start_token);
@@ -17,7 +23,7 @@ int64_t import(struct ast* parent, const struct token_list* tokens, int64_t star
 int64_t execute(struct ast* parent, const struct token_list* tokens, int64_t start_token);
 int64_t print(struct ast* parent, const struct token_list* tokens, int64_t start_token);
 int64_t variable(struct ast* parent, const struct token_list* tokens, int64_t start_token);
-bool is_valid_var(const char* str);
+enum var_status is_valid_var(const char* str, bool is_import);
 
 // THE FOLLOWING MACROS EVALUATE ARGUMENTS MULTIPLE TIMES.
 #define ASSERT_TOKEN_MATCH(token, assertion, lineno) do { \
@@ -378,9 +384,18 @@ int64_t print(struct ast* parent, const struct token_list* tokens, int64_t start
 }
 
 int64_t variable(struct ast* parent, const struct token_list* tokens, int64_t start_token) {
-	if (!is_valid_var(tokens->tokens[start_token].str)) { 
-		fprintf(stderr, "Syntax error on line %ld: '%s' is an invalid variable name.\n", tokens->tokens[start_token].lineno, tokens->tokens[start_token].str);
-		exit(EXIT_FAILURE);
+	bool is_import = start_token > 1 && strcmp(tokens->tokens[start_token - 2].str, "import") == 0;
+	switch (is_valid_var(tokens->tokens[start_token].str, is_import)) { 
+		case VALID_VARNAME:
+			break;
+		case INVALID_VARNAME:
+			fprintf(stderr, "Syntax error on line %ld: '%s' is an invalid variable name.\n", tokens->tokens[start_token].lineno, tokens->tokens[start_token].str);
+			exit(EXIT_FAILURE);
+			break;
+		case UNRECOGNIZED_TOKEN:
+			fprintf(stderr, "Syntax error on line %ld: unrecognized token '%s'.\n", tokens->tokens[start_token].lineno, tokens->tokens[start_token].str);
+			exit(EXIT_FAILURE);
+			break;
 	}
 
 	ASSERT_NOT_NULL(parent);
@@ -401,28 +416,28 @@ int64_t variable(struct ast* parent, const struct token_list* tokens, int64_t st
 	return 1;
 }
 
-bool is_valid_var(const char* str) {
+enum var_status is_valid_var(const char* str, bool is_import) {
 	if (*str == '\0') {
-		return false;
+		return is_import ? INVALID_VARNAME : UNRECOGNIZED_TOKEN;
 	}
 	if (strcmp("EXECUTE", str) == 0) {
-		return false;
+		return is_import ? INVALID_VARNAME : UNRECOGNIZED_TOKEN;
 	}
 	if (strcmp("PRINT", str) == 0) {
-		return false;
+		return is_import ? INVALID_VARNAME : UNRECOGNIZED_TOKEN;
 	}
 	if (strcmp("THIS", str) == 0) {
-		return false;
+		return is_import ? INVALID_VARNAME : UNRECOGNIZED_TOKEN;
 	}
 	if (strcmp("NULL", str) == 0) {
-		return false;
+		return is_import ? INVALID_VARNAME : UNRECOGNIZED_TOKEN;
 	}
 	do {
 		if (!(isupper(*str) || isdigit(*str) || *str == '_')) {
-			return false;
+			return is_import ? INVALID_VARNAME : UNRECOGNIZED_TOKEN;
 		}
 	} while (*(++str) != '\0');
-	return true;
+	return VALID_VARNAME;
 }
 
 void free_ast(struct ast *tree) {
