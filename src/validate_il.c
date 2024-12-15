@@ -59,7 +59,7 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 	if (node->type == IL_OP_NODE && node->val.op == IL_BIF_OP) {
 		int64_t base_index = varlist_index(node->children[0].val.str, vars);
 		if (base_index == -1) {
-			fprintf(stderr, "Error: variable name %s used prior to declaration on line %ld.\n", node->val.str, node->lineno);
+			fprintf(stderr, "Syntax error on line %ld: unrecognized token \'%s\'.\n", node->lineno, node->children[0].val.str);
 			return false;
 		}
 		if (vars->type_list[base_index] == UNIVERSE) {
@@ -79,7 +79,7 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 	
 	if (node->type == IL_VAR_NODE) {
 		if (varlist_index(node->val.str, vars) == -1) {
-			fprintf(stderr, "Error: variable name %s used prior to declaration on line %ld.\n", node->val.str, node->lineno);
+			fprintf(stderr, "Syntax error on line %ld: unrecognized token \'%s\'.\n", node->lineno, node->val.str);
 			return false;
 		}
 		return true;
