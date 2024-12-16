@@ -1,6 +1,7 @@
 #ifndef TILDEATHC_PARSE_H
 #define TILDEATHC_PARSE_H
 
+#include <stdbool.h>
 #include <stdint.h>
 struct token_list;
 
@@ -43,6 +44,6 @@ struct ast {
 									(node_type) == STRING_NODE ? "STRING_NODE" : (\
 									(node_type) == ROOT_NODE ? "ROOT_NODE" : "NONE")))
 
-struct ast* parse(const struct token_list* tokens);
+struct ast* parse(const struct token_list* tokens, bool is_library);
 void free_ast(struct ast* tree);
 #endif

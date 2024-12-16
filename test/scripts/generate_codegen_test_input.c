@@ -33,10 +33,10 @@ int32_t main(int argc, char* argv[]) {
 
 	struct token_list* tokens = tokenize(input);
 	fclose(input);
-	struct ast* syntax_tree = parse(tokens);
+	struct ast* syntax_tree = parse(tokens, false);
 	free_token_list(tokens);
 	free(tokens);
-	struct il_node* il_tree = generate_il(syntax_tree);
+	struct il_node* il_tree = generate_il(syntax_tree, false, NULL);
 	free_ast(syntax_tree);
 	free(syntax_tree);
 	if (!validate_il(il_tree)) {

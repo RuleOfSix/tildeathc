@@ -54,6 +54,8 @@ struct tildeath_object_halves* bifurcate(struct tildeath_object* object) {
 		return NULL;
 	}
 	if (object->halves.left != NULL && object->halves.right != NULL) {
+		object->halves.left->refcount++;
+		object->halves.right->refcount++;
 		return &(object->halves);
 	} else if(object->halves.left != NULL || object->halves.right != NULL) {
 		fprintf(stderr, "~ATH Runtime Error: Cannot bifurcate malformed object.\n");
@@ -137,3 +139,6 @@ int32_t free_object(struct tildeath_object* object) {
 	return 0;
 }
 
+void print(char* str) {
+	printf("%s", str);
+}

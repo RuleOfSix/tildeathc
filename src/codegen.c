@@ -22,7 +22,6 @@ int32_t process_bif(const struct il_node* node, FILE* output, struct strarray* v
 int32_t process_die(const struct il_node* node, FILE* output, struct strarray* var_table);
 int32_t process_out(const struct il_node* node, FILE* output, const struct strarray* strings);
 int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* var_table);
-int32_t process_lib(const struct il_node* node);
 int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* var_table);
 int32_t process_in(const struct il_node* node, FILE* output, struct strarray* var_table);
 int64_t declare_var(char* varname, FILE* output, struct strarray* var_table, int64_t guard_offset);
@@ -61,6 +60,7 @@ int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output
 		fprintf(stderr, "Internal Error: unknown problem while building variable table from il tree.\n");
 		exit(EXIT_FAILURE);
 	}
+	int64_t stack_size = var_table.len > 1 ? 8 * var_table.len: 16;
 
 	fprintf(output, "\t.file\t\"%s\"\n", filename);	
 	if (strings.len > 0) {
@@ -77,7 +77,14 @@ int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output
 	fprintf(output, "main:\n");
 	fprintf(output, "\tpushq\t%%rbp\n");
 	fprintf(output, "\tmovq\t%%rsp, %%rbp\n");
-	fprintf(output, "\tsubq\t$%ld, %%rsp\n", var_table.len > 1 ? 8 * var_table.len : 16);
+	fprintf(output, "\tsubq\t$%ld, %%rsp\n", stack_size);
+	fprintf(output, "\txor\t%%eax, %%eax\n");
+	fprintf(output, "\tmovq\t%%rbp, %%rcx\n");
+	fprintf(output, ".ZLOOP:\n");
+	fprintf(output, "\tsubq\t$8, %%rcx\n");
+	fprintf(output, "\tmovq\t%%rax, (%%rcx)\n");
+	fprintf(output, "\tcmpq\t%%rcx, %%rsp\n");
+	fprintf(output, "\tjne\t.ZLOOP\n");
 
 	var_table.cap = 2;
 	free(var_table.array); 
@@ -125,7 +132,7 @@ int32_t process_node(const struct il_node* node, FILE* output, const struct stra
 			status = process_abs(node, output, var_table);
 			break;
 		case IL_LIB_OP:
-			status = process_lib(node);
+			status = process_block(node, output, strings, var_table);
 			break;
 		case IL_UNI_OP:
 			status = process_uni(node, output, var_table);
@@ -215,8 +222,7 @@ int32_t process_out(const struct il_node* node, FILE* output, const struct strar
 		fprintf(stderr, "Compiler error: unable to locate string %s", node->children[0].val.str);
 	}
 	fprintf(output, "\tleaq\t%s(%%rip), %%rdi\n", str_label);
-	fprintf(output, "\tmovl\t$0, %%eax\n"); // ax stores # of vector registers used for arguments to variadic functions, so this is needed to prevent segfaults.
-	fprintf(output, "\tcall\tprintf@PLT\n");
+	fprintf(output, "\tcall\tprint@PLT\n");
 	return 0;
 }
 
@@ -238,11 +244,6 @@ int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* v
 	fprintf(output, "\tmovl\t$0, %%edi\n");
 	fprintf(output, "\tcall\tcreate_object@PLT\n");
 	fprintf(output, "\tmovq\t%%rax, %ld(%%rbp)\n", var_offset);
-	return 0;
-}
-
-int32_t process_lib(const struct il_node* node) {
-	fprintf(stderr, "Libraries not yet implemented, ignoring import on line %ld\n", node->lineno);
 	return 0;
 }
 
