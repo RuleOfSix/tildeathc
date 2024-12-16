@@ -49,7 +49,7 @@ int32_t main(void) {
 	struct ast expected_output = {.type=ROOT_NODE, .val.str=NULL, .lineno=0, .num_children=6, .children=root_c};
 	
 	struct token_list* tokens = tokenize(input);
-	struct ast* output = parse(tokens);
+	struct ast* output = parse(tokens, false);
 	free_token_list(tokens);
 	free(tokens);
 	fclose(input);

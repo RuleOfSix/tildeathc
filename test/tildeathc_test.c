@@ -43,7 +43,7 @@ void parse_test(const struct token_list* input, const struct ast* expected, bool
 	if (!should_fail) {
 		ASSERT_NOT_NULL(expected);
 	}
-	struct ast* output = parse(input);
+	struct ast* output = parse(input, false);
 	if (should_fail) {
 		fprintf(stderr, "Parse test failed: parse did not fail with incorrect input.\n");
 		exit(EXIT_SUCCESS);
@@ -65,7 +65,7 @@ void il_test(const struct ast* input, const struct il_node* expected, bool shoul
 	if (!should_fail) {
 		ASSERT_NOT_NULL(expected);
 	}
-	struct il_node* output = generate_il(input);
+	struct il_node* output = generate_il(input, false, NULL);
 	if (should_fail) {
 		fprintf(stderr, "IL test failed: generate_il did not fail with incorrect input.\n");
 		exit(EXIT_SUCCESS);

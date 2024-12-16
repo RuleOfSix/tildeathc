@@ -40,7 +40,7 @@ enum var_status is_valid_var(const char* str, bool is_import);
 	} \
 } while (0)
 
-struct ast* parse(const struct token_list* tokens) {
+struct ast* parse(const struct token_list* tokens, bool is_library) {
 	struct ast* root = malloc(sizeof(*root));
 	MALLOC_NULL_CHECK(root);
 	root->type = ROOT_NODE;
@@ -55,6 +55,8 @@ struct ast* parse(const struct token_list* tokens) {
 	if (last->type != OPERATION_NODE || last->val.op != DIE_OP || strcmp(last->children[0].val.str, "THIS") != 0) {
 		fprintf(stderr, "Error: final grave is not THIS.DIE()\n");
 		exit(EXIT_FAILURE);
+	} else if (is_library) {
+		root->num_children -= 1;
 	}
 
 	return root;

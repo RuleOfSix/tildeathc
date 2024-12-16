@@ -2,7 +2,9 @@
 #define TILDEATHC_IL_H
 
 #include <stdint.h>
+#include <stdbool.h>
 struct ast;
+struct strarray;
 
 enum il_operation {
 	IL_IF_OP, 
@@ -61,7 +63,7 @@ struct il_node {
 									(il_node_type) == IL_OP_NODE ? "IL_OP_NODE" : (\
 									(il_node_type) == IL_ROOT_NODE ? "IL_ROOT_NODE" : "NONE"))))))
 
-struct il_node* generate_il(const struct ast* ast);
+struct il_node* generate_il(const struct ast* ast, bool is_library, struct strarray* include_directories);
 void free_il_tree(struct il_node* il_tree);
 
 #endif
