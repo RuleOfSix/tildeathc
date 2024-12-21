@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 enum tildeath_object_type {
 	ABSTRACT,
@@ -41,6 +42,7 @@ struct tildeath_object* create_object(enum tildeath_object_type type);
 struct tildeath_object_halves* bifurcate(struct tildeath_object* object);
 int32_t kill(struct tildeath_object* object);
 int32_t free_object(struct tildeath_object* object);
+void** allocate_progvars(size_t num_vars);
 void print(char* str);
 
 #endif

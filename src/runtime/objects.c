@@ -139,6 +139,13 @@ int32_t free_object(struct tildeath_object* object) {
 	return 0;
 }
 
+void** allocate_progvars(size_t num_vars) {
+	void** progvars = calloc(num_vars, sizeof(void*));
+	MALLOC_NULL_CHECK(progvars);
+	return progvars;
+}
+
 void print(char* str) {
 	printf("%s", str);
 }
+
