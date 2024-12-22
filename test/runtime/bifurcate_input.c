@@ -28,7 +28,7 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 	if (strcmp(((struct tildeath_input_object*)halves_1->right)->input_text, "est string") != 0) {
-		fprintf(stderr, "Error: input bifurcation #1 created right half with incorrect input_text.\n");
+		fprintf(stderr, "Error: input bifurcation #1 created right half with incorrect input_text: \"%s\", expected \"%s\".\n", ((struct tildeath_input_object*)halves_1->right)->input_text, "est string");
 		exit(EXIT_FAILURE);
 	}
 	free(halves_1->left);
@@ -62,7 +62,7 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 	if (strcmp(((struct tildeath_input_object*)halves_2->right)->input_text, " string") != 0) {
-		fprintf(stderr, "Error: input bifurcation #2 created right half with incorrect input_text.\n");
+		fprintf(stderr, "Error: input bifurcation #2 created right half with incorrect input_text: \"%s\", expected \"%s\".\n", ((struct tildeath_input_object*)halves_2->right)->input_text, " string");
 		exit(EXIT_FAILURE);
 	}
 	free(halves_2->left);
@@ -96,7 +96,7 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 	if (strcmp(((struct tildeath_input_object*)halves_3->right)->input_text, "0") != 0) {
-		fprintf(stderr, "Error: input bifurcation #3 created right half with incorrect input_text.\n");
+		fprintf(stderr, "Error: input bifurcation #3 created right half with incorrect input_text: \"%s\", expected \"%s\".\n", ((struct tildeath_input_object*)halves_3->right)->input_text, "0");
 		exit(EXIT_FAILURE);
 	}
 	free(halves_3->left);
@@ -130,7 +130,7 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 	if (strcmp(((struct tildeath_input_object*)halves_4->right)->input_text, "") != 0) {
-		fprintf(stderr, "Error: input bifurcation #4 created right half with incorrect input_text.\n");
+		fprintf(stderr, "Error: input bifurcation #4 created right half with non-empty input_text.\n");
 		exit(EXIT_FAILURE);
 	}
 	free(halves_4->left);

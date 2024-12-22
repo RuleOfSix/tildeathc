@@ -2,17 +2,12 @@
 #include <registers.h>
 #include <il.h>
 #include <nullcheck.h>
+#include <util.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-
-struct strarray {
-	char** array;
-	int64_t len;
-	int64_t cap;
-};
 
 int32_t process_node(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table);
 int32_t process_if(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table);
@@ -24,6 +19,7 @@ int32_t process_out(const struct il_node* node, FILE* output, const struct strar
 int32_t process_abs(const struct il_node* node, FILE* output, struct strarray* var_table);
 int32_t process_uni(const struct il_node* node, FILE* output, struct strarray* var_table);
 int32_t process_in(const struct il_node* node, FILE* output, struct strarray* var_table);
+int32_t process_lib(const struct il_node* node, FILE* output, struct strarray* var_table);
 int64_t declare_var(char* varname, FILE* output, struct strarray* var_table, int64_t guard_offset);
 int32_t get_var_table(const struct il_node* il, struct strarray* output);
 int64_t get_offset(char* varname, struct strarray* var_table);
@@ -128,7 +124,7 @@ int32_t process_node(const struct il_node* node, FILE* output, const struct stra
 			status = process_abs(node, output, var_table);
 			break;
 		case IL_LIB_OP:
-			status = process_block(node, output, strings, var_table);
+			status = process_lib(node, output, var_table);
 			break;
 		case IL_UNI_OP:
 			status = process_uni(node, output, var_table);
@@ -167,8 +163,17 @@ int32_t process_if(const struct il_node* node, FILE* output, const struct strarr
 
 int32_t process_block(const struct il_node* node, FILE* output, const struct strarray* strings, struct strarray* var_table) {
 	int32_t status = 0;
+	struct strarray* scope_var_table = dup_strarray(var_table);
 	for (int64_t i = 0; i < node->num_children; i++) { 
-		status = status || process_node(node->children + i, output, strings, var_table);
+		bool is_execute = i == node->num_children - 1 &&
+						  (node->children[i].val.op != IL_IF_OP ||
+						  node->children[i].children[1].val.op == IL_BLOCK_OP);
+		struct strarray* cur_var_table = is_execute ? var_table : scope_var_table;
+		status = status || process_node(node->children + i, output, strings, cur_var_table);
+	}
+	for (int64_t i = var_table->len; i < scope_var_table->len; i++) {
+		fprintf(output, "\tmovq\t%ld(%%r12), %%rdi\n", i * 8);
+		fprintf(output, "\tcall\tfree_object@PLT\n");
 	}
 	return status;
 }
@@ -260,7 +265,15 @@ int32_t process_in(const struct il_node* node, FILE* output, struct strarray* va
 	fprintf(output, "\tcall\tcreate_object@PLT\n");
 	fprintf(output, "\tmovq\t%%rax, %ld(%%r12)\n", var_offset);
 	return 0;
+}
 
+
+int32_t process_lib(const struct il_node* node, FILE* output, struct strarray* var_table) {
+	int32_t status = 0;
+	for (int64_t i = 0; i < node->num_children; i++) {
+		status = status || process_node(node->children + i, output, NULL, var_table);
+	}
+	return status;
 }
 
 int64_t declare_var(char* varname, FILE* output, struct strarray* var_table, int64_t guard_offset) {
@@ -272,14 +285,8 @@ int64_t declare_var(char* varname, FILE* output, struct strarray* var_table, int
 		fprintf(output, "\tmovq\t%ld(%%r12), %%rdi\n", offset);
 		fprintf(output, "\tcall\tfree_object@PLT\n");
 	} else {
-		if (var_table->len == var_table->cap) {
-			var_table->cap *= 2;
-			var_table->array = realloc(var_table->array, sizeof(*(var_table->array)) * var_table->cap);
-			MALLOC_NULL_CHECK(var_table->array);
-		}
-		var_table->array[var_table->len] = varname;
-		offset = 8 * var_table->len;
-		var_table->len++;
+		append_to_strarray(var_table, varname, false);
+		offset = 8 * (var_table->len - 1);
 	}
 	return offset;
 }
@@ -288,21 +295,9 @@ int32_t get_var_table(const struct il_node* il, struct strarray* output) {
 	if (output == NULL) {
 		return 1;
 	}
-	if (output->array == NULL) {
-		output->len = 0;
-		output->cap = 2;
-		output->array = malloc(sizeof(*(output->array)) * output->cap);
-		MALLOC_NULL_CHECK(output->array);
-	}
 
 	if (il->type == IL_DEC_NODE && get_offset(il->val.str, output) == -1) {
-		if (output->len >= output->cap) {
-			output->cap *= 2;
-			output->array= realloc(output->array, sizeof(*(output->array)) * output->cap);
-			MALLOC_NULL_CHECK(output->array);
-		}
-		output->array[output->len] = il->val.str;
-		output->len++;
+		append_to_strarray(output, il->val.str, false);
 		return 0;
 	}
 
@@ -330,21 +325,9 @@ int32_t get_strings(const struct il_node* il, struct strarray* output) {
 	if (output == NULL) {
 		return 1;
 	}
-	if (output->array == NULL) {
-		output->len = 0;
-		output->cap = 2;
-		output->array = malloc(sizeof(*(output->array)) * output->cap);
-		MALLOC_NULL_CHECK(output->array);
-	}
 
 	if (il->type == IL_STR_NODE) {
-		if (output->len >= output->cap) {
-			output->cap *= 2;
-			output->array = realloc(output->array, sizeof(*(output->array)) * output->cap);
-			MALLOC_NULL_CHECK(output->array);
-		}
-		output->array[output->len] = il->val.str;
-		output->len++;
+		append_to_strarray(output, il->val.str, false);
 		return 0;
 	} 
 

@@ -82,7 +82,9 @@ struct tildeath_object_halves* bifurcate(struct tildeath_object* object) {
 													   .halves.right=NULL,
 													   .refcount=2};
 			((struct tildeath_input_object*)object->halves.right)->input_length = ((struct tildeath_input_object*)object)->input_length - 1;
-			((struct tildeath_input_object*)object->halves.right)->input_text = util_strdup(((struct tildeath_input_object*)object)->input_text + 1);
+			((struct tildeath_input_object*)object->halves.right)->input_text = malloc(((struct tildeath_input_object*)object->halves.right)->input_length * sizeof(char));
+			MALLOC_NULL_CHECK(((struct tildeath_input_object*)object->halves.right)->input_text);
+			memcpy(((struct tildeath_input_object*)object->halves.right)->input_text, ((struct tildeath_input_object*)object)->input_text + 1, ((struct tildeath_input_object*)object->halves.right)->input_length);
 			if (((struct tildeath_input_object*)object->halves.right)->input_length == 0) {
 				object->halves.right->state = DEAD;
 			}

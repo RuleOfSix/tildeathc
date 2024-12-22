@@ -39,9 +39,6 @@ int32_t main(int argc, char* argv[]) {
 	struct il_node* il_tree = generate_il(syntax_tree, false, NULL);
 	free_ast(syntax_tree);
 	free(syntax_tree);
-	if (!validate_il(il_tree)) {
-		exit(EXIT_FAILURE);
-	}
 
 	print_il_tree_definition(il_tree, 0, false);
 }

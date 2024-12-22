@@ -14,16 +14,17 @@ enum tildeath_object_type {
 };
 
 struct varlist {
-	int64_t memsize;
-	int64_t length;
+	int64_t cap;
+	int64_t len;
 	char** list;
 	enum tildeath_object_type* type_list;
 };
 
 bool validate_il_node(struct il_node* node, struct varlist* vars);
 int64_t varlist_index (char* str, struct varlist* vars);
-void append_to_varlist(char* str, enum tildeath_object_type op, struct varlist* vars);
 enum tildeath_object_type op_to_var_type(enum il_operation op);
+void append_to_varlist(char* str, enum tildeath_object_type op, struct varlist* vars);
+void dup_varlist(struct varlist* out, const struct varlist* in);
 
 
 bool validate_il(struct il_node* node) {
@@ -37,11 +38,11 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 		should_free = true;
 		vars = malloc(sizeof(*vars));
 		MALLOC_NULL_CHECK(vars);
-		vars->memsize = 10;
-		vars->length = 0;
-		vars->list = malloc(vars->memsize * sizeof(*(vars->list)));
+		vars->cap = 10;
+		vars->len = 0;
+		vars->list = malloc(vars->cap * sizeof(*(vars->list)));
 		MALLOC_NULL_CHECK(vars->list);
-		vars->type_list = malloc(vars->memsize * sizeof(*(vars->list)));
+		vars->type_list = malloc(vars->cap * sizeof(*(vars->list)));
 		MALLOC_NULL_CHECK(vars->type_list);
 	}
 
@@ -89,10 +90,26 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 		return true;
 	}
 
+	struct ptrarray delayed_children = {.len=0, .cap=0, .array=NULL}; 
 	for (int64_t i = 0; i < node->num_children; i++) {
-		 if (!validate_il_node(node->children + i, vars)) {
-			 is_valid = false;
-		 }
+		/* We have to descend into IF blocks at the end in order to do a breadth-first search that correctly handles scope */
+		if (node->children[i].type == IL_OP_NODE && node->children[i].val.op == IL_IF_OP) {
+			is_valid = is_valid && validate_il_node(node->children[i].children, vars); // validate IF var
+
+			bool has_execute = true;
+			struct il_node* last_op = node->children[i].children[1].children + node->children[i].children[1].num_children - 1;
+			if (last_op->type == IL_OP_NODE && last_op->val.op == IL_IF_OP) {
+				has_execute = last_op->children[1].val.op == IL_BLOCK_OP;
+			}
+			if (has_execute) {
+				is_valid = is_valid && validate_il_node(last_op, vars); // validate EXECUTE
+			}
+
+			append_to_ptrarray(&delayed_children, node->children + i);
+			continue;
+		}
+
+		is_valid = is_valid && validate_il_node(node->children + i, vars);
 	}
 
 	/* Universe check has to be after var verification so that the var in question is definitely in vars*/
@@ -102,7 +119,16 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 			is_valid = false;
 		}
 	}
+
+	/* Now we can descend further down the tree. */
+	for (int64_t i = 0; i < delayed_children.len; i++) {
+		struct varlist cur_vars = {.len=0, .cap=0, .list=NULL, .type_list=NULL};
+		dup_varlist(&cur_vars, vars);
+		is_valid = is_valid && validate_il_node((struct il_node*) delayed_children.array[i], &cur_vars);
+		free_varlist(&cur_vars);
+	}
 	
+	free(delayed_children.array);
 	if (should_free) {
 		free_varlist(vars);
 		free(vars);
@@ -113,7 +139,7 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 
 int64_t varlist_index(char* str, struct varlist* vars) {
 	int64_t index = -1;
-	for (int64_t i = 0; i < vars->length; i++) {
+	for (int64_t i = 0; i < vars->len; i++) {
 		if (strcmp(str, vars->list[i]) == 0) {
 			index = i;
 			break;
@@ -123,16 +149,37 @@ int64_t varlist_index(char* str, struct varlist* vars) {
 }
 
 void append_to_varlist(char* str, enum tildeath_object_type type, struct varlist* vars) {
-	if (vars->length >= vars->memsize) {
-		vars->memsize *= 2;
-		vars->list = realloc(vars->list, vars->memsize * sizeof(*(vars->list)));
+	if (vars->len >= vars->cap) {
+		vars->cap *= 2;
+		vars->list = realloc(vars->list, vars->cap * sizeof(*(vars->list)));
 		MALLOC_NULL_CHECK(vars);
-		vars->type_list = realloc(vars->type_list, vars->memsize * sizeof(*(vars->type_list)));
+		vars->type_list = realloc(vars->type_list, vars->cap * sizeof(*(vars->type_list)));
 	}
-	vars->list[vars->length] = util_strdup(str);
-	vars->type_list[vars->length] = type;
-	vars->length++;
+	vars->list[vars->len] = util_strdup(str);
+	vars->type_list[vars->len] = type;
+	vars->len++;
 	return;
+}
+
+void dup_varlist(struct varlist* out, const struct varlist* in) {
+	out->len = in->len;
+	out->cap = in->cap;
+	out->list = malloc(out->cap * sizeof(*(out->list)));
+	MALLOC_NULL_CHECK(out->list);
+	out->type_list = malloc(out->cap * sizeof(*(out->type_list)));
+	MALLOC_NULL_CHECK(out->type_list);
+	for (int64_t i = 0; i < out->len; i++) {
+		out->list[i] = util_strdup(in->list[i]);
+		out->type_list[i] = in->type_list[i];
+	}
+}
+
+void free_varlist(struct varlist* vars) {
+	for (int64_t i = 0; i < vars->len; i++) {
+		free(vars->list[i]);
+	}
+	free(vars->list);
+	free(vars->type_list);
 }
 
 enum tildeath_object_type op_to_var_type(enum il_operation op) {
@@ -147,11 +194,3 @@ enum tildeath_object_type op_to_var_type(enum il_operation op) {
 			return ABSTRACT;
 	}
 }
-
-void free_varlist(struct varlist* vars) {
-	for (int64_t i = 0; i < vars->length; i++) {
-		free(vars->list[i]);
-	}
-}
-
-
