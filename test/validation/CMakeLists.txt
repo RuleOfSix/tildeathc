@@ -9,3 +9,8 @@ tildeathc_add_test(TARGET_NAME validate_il_bifurcate_universe TEST_NAME Validate
 tildeathc_add_test(TARGET_NAME validate_il_overwrite_kill_universe TEST_NAME ValidateILOverwriteKillUniverse SOURCE_FILE overwrite_kill_universe.c DEPENDENCIES validate_il_shared REGEX "Error:.*universe.*line [0-9]*.*")
 tildeathc_add_test(TARGET_NAME validate_il_overbifurcate_kill_universe TEST_NAME ValidateILOverbifurcateKillUniverse SOURCE_FILE overbifurcate_kill_universe.c DEPENDENCIES validate_il_shared)
 tildeathc_add_test(TARGET_NAME validate_il_this_dot_die TEST_NAME ValidateILThisDotDie SOURCE_FILE this_dot_die.c DEPENDENCIES validate_il_shared)
+tildeathc_add_test(TARGET_NAME validate_il_scope_test_1 TEST_NAME ValidateIlScopeTest1 SOURCE_FILE scope_test_1.c DEPENDENCIES validate_il_shared REGEX "error.*line 8.*[uU]nrecognized token.*BUTTERFLY")
+tildeathc_add_test(TARGET_NAME validate_il_scope_test_2 TEST_NAME ValidateIlScopeTest2 SOURCE_FILE scope_test_2.c DEPENDENCIES validate_il_shared REGEX "error.*line 1.*[uU]nrecognized token.*BUTTERFLY")
+tildeathc_add_test(TARGET_NAME validate_il_scope_test_3 TEST_NAME ValidateIlScopeTest3 SOURCE_FILE scope_test_3.c DEPENDENCIES validate_il_shared REGEX "error.*line 6.*[uU]nrecognized token.*BUTTERFLY")
+tildeathc_add_test(TARGET_NAME validate_il_scope_test_4 TEST_NAME ValidateIlScopeTest4 SOURCE_FILE scope_test_4.c DEPENDENCIES validate_il_shared REGEX "error.*line 9.*[uU]nrecognized token.*BUTTERFLY")
+tildeathc_add_test(TARGET_NAME validate_il_scope_test_5 TEST_NAME ValidateIlScopeTest5 SOURCE_FILE scope_test_5.c DEPENDENCIES validate_il_shared)

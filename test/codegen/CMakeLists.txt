@@ -5,3 +5,4 @@ tildeathc_add_test(TARGET_NAME codegen_bifurcate_dead_overwrite TEST_NAME Codege
 tildeathc_add_test(TARGET_NAME codegen_bifurcate_overwrite_self TEST_NAME CodegenBifurcateOverwriteSelf SOURCE_FILE bifurcate_overwrite_self.c)
 tildeathc_add_test(TARGET_NAME codegen_refcount_test_1 TEST_NAME CodegenRefcountTest1 SOURCE_FILE refcount_test_1.c)
 tildeathc_add_test(TARGET_NAME codegen_refcount_test_2 TEST_NAME CodegenRefcountTest2 SOURCE_FILE refcount_test_2.c)
+
