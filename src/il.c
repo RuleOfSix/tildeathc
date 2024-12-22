@@ -293,8 +293,9 @@ void add_library(const char* libname, struct il_node* output) {
 	FILE* libstream = fopen(libfile, "r");
 	for (int64_t i = 0; i < lib_search_directories.len && libstream == NULL; i++) {
 		char* new_libfile = util_strdup(lib_search_directories.array[i]);
+		new_libfile = util_strcat(new_libfile, "/");
 		new_libfile = util_strcat(new_libfile, libfile);
-		libstream = fopen(libfile, "r");
+		libstream = fopen(new_libfile, "r");
 		free(new_libfile);
 	}
 	free(libfile);

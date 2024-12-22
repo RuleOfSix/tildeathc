@@ -5,6 +5,7 @@
 #include<validate_il.h>
 #include<codegen.h>
 #include<nullcheck.h>
+#include<util.h>
 #include<stdio.h>
 #include<stdint.h>
 #include<stdlib.h>
@@ -20,10 +21,12 @@ int32_t main(int32_t argc, char* argv[]) {
 	char* output_filename = NULL;
 	char default_output_filename[] = "a.out";
 	char default_asm_output_filename[] = "a.s";
+	struct strarray include_dirs = {.len=0, .cap=0, .array=NULL};
+	append_to_strarray(&include_dirs, "/usr/include/tildeathc", true);
 	bool output_asm = false;
 	bool echo_output = false;
 	opterr = 0;
-	for (char opt = getopt(argc, argv, "Seo:hv"); opt != -1; opt = getopt(argc, argv, "Seo:hv")) {
+	for (char opt = getopt(argc, argv, "SI:eo:hv"); opt != -1; opt = getopt(argc, argv, "SI:eo:hv")) {
 		switch (opt) {
 			case 'S':
 				output_asm = true;
@@ -33,6 +36,9 @@ int32_t main(int32_t argc, char* argv[]) {
 				break;
 			case 'o':
 				output_filename = optarg;
+				break;
+			case 'I':
+				append_to_strarray(&include_dirs, optarg, true);
 				break;
 			case 'h':
 				printf("\ntildeathc is a compiler for ruleofsix's version of the ~ATH programming language. It will not compile any other form of ~ATH,\n");
@@ -89,7 +95,7 @@ int32_t main(int32_t argc, char* argv[]) {
 	struct ast* syntax_tree = parse(tokens, false);
 	free_token_list(tokens);
 	free(tokens);
-	struct il_node* il_tree = generate_il(syntax_tree, false, NULL);
+	struct il_node* il_tree = generate_il(syntax_tree, false, &include_dirs);
 	free_ast(syntax_tree);
 	free(syntax_tree);
 	if (!validate_il(il_tree)) {
