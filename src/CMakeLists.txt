@@ -46,6 +46,7 @@ target_include_directories(tildeathc PRIVATE "${PROJECT_SOURCE_DIR}/include/tild
 									 PRIVATE "${PROJECT_BINARY_DIR}/include/tildeathc"
 									 )
 target_link_libraries(tildeathc PRIVATE tokenize parse il validate_il tildeathc_codegen)
+install(TARGETS tildeathc DESTINATION bin)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 	add_library(util_shared SHARED util.c)

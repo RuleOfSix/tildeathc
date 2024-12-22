@@ -14,8 +14,9 @@
 #include<errno.h>
 
 int32_t main(int32_t argc, char* argv[]) {
+	const char* usage_str = "Usage: tildeathc [-S] [-e] [-h] [-v] [-o output_file] [-I include_directory] input_file";
 	if (argc == 1) {
-		printf("Usage: tildeathc [-S] [-e] [-h] [-v] [-o output_file] input_file\n");
+		printf("%s\n", usage_str);
 		exit(EXIT_FAILURE);
 	}
 	char* output_filename = NULL;
@@ -43,14 +44,15 @@ int32_t main(int32_t argc, char* argv[]) {
 			case 'h':
 				printf("\ntildeathc is a compiler for ruleofsix's version of the ~ATH programming language. It will not compile any other form of ~ATH,\n");
 				printf("and it currently can only compile to amd64 Linux systems. If you're having problems or have any suggestions, feel free to email\n");
-				printf("the creator at github@ruleofsix.ca\n\n");
-				printf("Usage:\n\n\ttildeathc [-S] [-e] [-h] [-v] [-o output_file] input_file\n");
+				printf("the creator at github@ruleofsix.ca.\n\n");
+				printf("%s\n", usage_str);
 				printf("Options:\n\n");
 				printf("\t-S\t\t\tOutput assembly code instead of an executable binary\n");
 				printf("\t-e\t\t\tEcho output to stdout instead of writing to a file (only usable with -S, ignores -o)\n");
 				printf("\t-h\t\t\tDisplay help message and exit\n");
 				printf("\t-v\t\t\tDisplay version information and exit\n");
 				printf("\t-o output_file\t\tPath to file where output binary should be written (default: a.out)\n");
+				printf("\t-I include_dir\t\tPath to directory for library includes. Can be used more than once, current directory and /usr/include/tildeathc are searched by default.\n");
 				printf("\n");
 				exit(EXIT_SUCCESS);
 				break;
@@ -59,7 +61,7 @@ int32_t main(int32_t argc, char* argv[]) {
 				exit(EXIT_SUCCESS);
 				break;
 			case '?':
-				printf("Usage: tildeathc [-S] [-e] [-o output_file] input_file\n");
+				printf("%s\n", usage_str);
 				exit(EXIT_FAILURE);
 				break;
 		}
