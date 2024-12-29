@@ -178,16 +178,18 @@ void convert_bifurcate_node(const struct ast* node, struct il_node* output) {
 }
 
 void convert_die_node(const struct ast* node, struct il_node* output) {
-	if (node->num_children != 1 || node->children == NULL) {
+	if (node->children == NULL) {
 		fprintf(stderr, "Internal Compiler Error: malformed DIE_OP node at line %ld passed to convert_die_node function. Terminating.\n", node->lineno);
 		exit(EXIT_FAILURE);
 	}
 	output->type = IL_OP_NODE;
 	output->val.op = IL_DIE_OP;
-	output->num_children = 1;
+	output->num_children = node->num_children;
 	output->children = malloc(output->num_children * sizeof(*(output->children)));
 	MALLOC_NULL_CHECK(output->children);
-	convert_var_node(node->children, output->children);		
+	for (int64_t i = 0; i < output->num_children; i++) {
+		convert_var_node(node->children + i, output->children + i);		
+	}
 }
 
 void convert_import_node(const struct ast* node, struct il_node* output, bool is_library, bool* can_import_library) {
