@@ -4,4 +4,5 @@
 #define TEST_INPUT_DIR "@PROJECT_SOURCE_DIR@/test/inputs"
 #define RUNTIME_LIB_DIR "@PROJECT_BINARY_DIR@/src/runtime"
 #define SRC_LIB_DIR "@PROJECT_BINARY_DIR@/src"
+#define TILDEATH_LIB_INSTALL_DIR "@CMAKE_INSTALL_PREFIX@/include/tildeathc"
 #endif

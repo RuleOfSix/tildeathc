@@ -23,7 +23,7 @@ int32_t main(int32_t argc, char* argv[]) {
 	char default_output_filename[] = "a.out";
 	char default_asm_output_filename[] = "a.s";
 	struct strarray include_dirs = {.len=0, .cap=0, .array=NULL};
-	append_to_strarray(&include_dirs, "/usr/include/tildeathc", true);
+	append_to_strarray(&include_dirs, TILDEATH_LIB_INSTALL_DIR, true);
 	bool output_asm = false;
 	bool echo_output = false;
 	opterr = 0;
