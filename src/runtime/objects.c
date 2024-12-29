@@ -64,7 +64,7 @@ struct tildeath_object_halves* bifurcate(struct tildeath_object* object) {
 		if (object->type == INPUT) {
 			object->halves.left = malloc(sizeof(struct tildeath_object));
 			MALLOC_NULL_CHECK(object->halves.left);
-			*(object->halves.left) = (struct tildeath_object){.type=INPUT,
+			*(object->halves.left) = (struct tildeath_object){.type=ABSTRACT,
 													   .state=ALIVE,
 													   .halves.left=NULL,
 													   .halves.right=NULL,
