@@ -112,11 +112,13 @@ bool validate_il_node(struct il_node* node, struct varlist* vars) {
 		is_valid = is_valid && validate_il_node(node->children + i, vars);
 	}
 
-	/* Universe check has to be after var verification so that the var in question is definitely in vars*/
+	/* Universe check has to be after var verification so that the vars in question is definitely in vars*/
 	if (node->type == IL_OP_NODE && node->val.op == IL_DIE_OP && is_valid) {
-		if (vars->type_list[varlist_index(node->children[0].val.str, vars)] == UNIVERSE) {
-			fprintf(stderr, "Error: attempt to kill a universe object on line %ld.\n", node->lineno);
-			is_valid = false;
+		for (int64_t i = 0; i < node->num_children; i++) {
+			if (vars->type_list[varlist_index(node->children[i].val.str, vars)] == UNIVERSE) {
+				fprintf(stderr, "Error: attempt to kill a universe object on line %ld.\n", node->lineno);
+				is_valid = false;
+			}
 		}
 	}
 

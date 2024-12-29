@@ -4,6 +4,7 @@ tildeathc_add_test(TARGET_NAME il_empty_loop TEST_NAME ILEmptyLoop SOURCE_FILE e
 tildeathc_add_test(TARGET_NAME il_nested TEST_NAME ILNested SOURCE_FILE nested.c DEPENDENCIES il_shared)
 tildeathc_add_test(TARGET_NAME il_bifurcate TEST_NAME ILBifurcate SOURCE_FILE bifurcate.c DEPENDENCIES il_shared)
 tildeathc_add_test(TARGET_NAME il_die TEST_NAME ILDie SOURCE_FILE die.c DEPENDENCIES il_shared)
+tildeathc_add_test(TARGET_NAME il_die_multiple TEST_NAME ILDieMultiple SOURCE_FILE die_multiple.c DEPENDENCIES il_shared)
 tildeathc_add_test(TARGET_NAME il_abstract TEST_NAME ILAbstract SOURCE_FILE abstract.c DEPENDENCIES il_shared)
 tildeathc_add_test(TARGET_NAME il_universe TEST_NAME ILUniverse SOURCE_FILE universe.c DEPENDENCIES il_shared)
 #tildeathc_add_test(TARGET_NAME il_library TEST_NAME ILLibrary SOURCE_FILE library.c DEPENDENCIES il_shared)

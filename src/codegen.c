@@ -235,9 +235,11 @@ int32_t process_die(const struct il_node* node, FILE* output, struct strarray* v
 		fprintf(output, "\tleave\n");
 		fprintf(output, "\tret\n");
 	} else {
-		int64_t var_offset = get_offset(node->children[0].val.str, var_table);
-		fprintf(output, "\tmovq\t%ld(%%r12), %%rdi\n", var_offset);
-		fprintf(output, "\tcall\tkill@PLT\n");
+		for (int64_t i = 0; i < node->num_children; i++) {
+			int64_t var_offset = get_offset(node->children[i].val.str, var_table);
+			fprintf(output, "\tmovq\t%ld(%%r12), %%rdi\n", var_offset);
+			fprintf(output, "\tcall\tkill@PLT\n");
+		}
 	}
 	return 0;
 }
