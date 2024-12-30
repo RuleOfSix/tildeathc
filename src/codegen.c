@@ -328,7 +328,7 @@ int32_t get_strings(const struct il_node* il, struct strarray* output) {
 		return 1;
 	}
 
-	if (il->type == IL_STR_NODE) {
+	if (il->type == IL_STR_NODE && get_offset(il->val.str, output) == -1) {
 		append_to_strarray(output, il->val.str, false);
 		return 0;
 	} 
