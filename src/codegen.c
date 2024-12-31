@@ -63,7 +63,7 @@ int32_t generate_assembly(const struct il_node* il, char* filename, FILE* output
 		fprintf(output, "\t.section\t.rodata\n");
 		for (int64_t i = 0; i < strings.len; i++) {
 			fprintf(output, ".LS%ld:\n", i);
-			fprintf(output, "\t.string \"%s\\n\"\n", strings.array[i]);
+			fprintf(output, "\t.string \"%s\"\n", strings.array[i]);
 		}
 	}
 	fprintf(output, "\t.text\n");

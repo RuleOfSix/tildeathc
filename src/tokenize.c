@@ -72,42 +72,72 @@ struct token* get_next_token(char** instr, int64_t lineno, const char** const to
 	}
 
 	if (output == NULL && **instr == '"') {
-		char* q;
+		char* p;
 		int32_t i;
-		for (i = 1, q = *instr; *(++q) != '"'; i++) {
-			if (*q == '\n' || *q == '\0'){
+		for (i = 1, p = *instr; *(++p) != '"'; i++) {
+			if (*p == '\n' || *p == '\0'){
 				fprintf(stderr, "Error: unterminated string on line %ld\n", lineno);
 				exit(EXIT_FAILURE);
 			}
-			if (!isprint(*q)) {
+			if (!isprint(*p)) {
 				fprintf(stderr, "Input stream contains malformed character data. Terminating.\n");
 				exit(EXIT_FAILURE);
 			}
 		}
 		i++;
-		q++;
+		p++;
+
 		output = malloc(sizeof(*output));
 		MALLOC_NULL_CHECK(output);
 		output->str = malloc((i + 1) * sizeof(*(output->str)));
 		MALLOC_NULL_CHECK(output->str);
-		memcpy(output->str, *instr, i);
-		output->str[i] = '\0';
-		*instr = q;
+
+		char* q = output->str;
+		p = *instr;
+		for (int32_t j = 0; j < i; j++) {
+			if (*p != '\\') {
+				*q = *p;
+				q++;
+				p++;
+				continue;
+			} 
+			if (j + 1 < i) {
+				if (*(p+1) == 'n' || *(p+1) == 't') {
+					*q = *p;
+					q++;
+					p++;
+					continue;
+				}
+				if (*(p+1) == '\\') {
+					*q = *p;
+					*(q+1) = *(p+1);
+					q += 2;
+					p += 2;
+					j++;
+					continue;
+				}
+			}
+			p++;
+			continue;
+		}
+		//memcpy(output->str, *instr, i);
+		*q = '\0';
+		*instr = p;
 	}
 
 	if (output == NULL) {
 		int16_t i = 0;
-		char* q;
-		for (q = *instr; !isspace(*q) && (strchr(",.\";(){}[]", *q) == NULL); q++) {
-			if (!isprint(*q)) {
+		char* p;
+		for (p = *instr; !isspace(*p) && (strchr(",.\";(){}[]", *p) == NULL); p++) {
+			if (!isprint(*p)) {
 				fprintf(stderr, "Input stream contains malformed character data. Terminating.\n");
 				exit(EXIT_FAILURE);
 			}
-			if (*q == '\0')	{
+			if (*p == '\0')	{
 				goto failed_to_find;
 			}
-			if (*q == '#') {
-				while (*(++q) != '\0');
+			if (*p == '#') {
+				while (*(++p) != '\0');
 				if (i == 0) {
 					goto failed_to_find;
 				} else {
@@ -122,7 +152,7 @@ struct token* get_next_token(char** instr, int64_t lineno, const char** const to
 		MALLOC_NULL_CHECK(output->str);
 		memcpy(output->str, *instr, i);
 		output->str[i] = '\0';
-		*instr = q;
+		*instr = p;
 	}
 
 	if (output != NULL) {

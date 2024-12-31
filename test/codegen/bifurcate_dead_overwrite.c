@@ -21,7 +21,7 @@ int main(void) {
 											{.type=IL_OP_NODE, .val.op=IL_JMP_OP, .id=16, .lineno=6, .num_children=1, .children=(struct il_node[]) {
 												{.type=IL_TAR_NODE, .val.tar=9, .id=17, .lineno=6, .num_children=0, .children=NULL}}}}},
 										{.type=IL_OP_NODE, .val.op=IL_OUT_OP, .id=18, .lineno=6, .num_children=1, .children=(struct il_node[]) {
-											{.type=IL_STR_NODE,.val.str="COW is dead", .id=19, .lineno=6, .num_children=0,.children=NULL}}}}}}},
+											{.type=IL_STR_NODE,.val.str="COW is dead\n", .id=19, .lineno=6, .num_children=0,.children=NULL}}}}}}},
 								{.type=IL_OP_NODE, .val.op=IL_DIE_OP, .id=20, .lineno=7, .num_children=1, .children=(struct il_node[]) {
 									{.type=IL_VAR_NODE, .val.str="THIS", .id=21, .lineno=7, .num_children=0, .children=NULL}}}}};
 
