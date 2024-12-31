@@ -15,7 +15,7 @@ int main(void) {
 											{.type=IL_OP_NODE, .val.op=IL_JMP_OP, .id=10, .lineno=4, .num_children=1, .children=(struct il_node[]) {
 												{.type=IL_TAR_NODE, .val.tar=5, .id=11, .lineno=4, .num_children=0, .children=NULL}}}}},
 										{.type=IL_OP_NODE, .val.op=IL_OUT_OP, .id=12, .lineno=4, .num_children=1, .children=(struct il_node[]) {
-											{.type=IL_STR_NODE,.val.str="Hello, World!", .id=13, .lineno=4, .num_children=0,.children=NULL}}}}}}},
+											{.type=IL_STR_NODE,.val.str="Hello, World!\n", .id=13, .lineno=4, .num_children=0,.children=NULL}}}}}}},
 								{.type=IL_OP_NODE, .val.op=IL_DIE_OP, .id=14, .lineno=5, .num_children=1, .children=(struct il_node[]) {
 									{.type=IL_VAR_NODE, .val.str="THIS", .id=15, .lineno=5, .num_children=0, .children=NULL}}}}};
 

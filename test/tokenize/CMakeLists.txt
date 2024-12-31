@@ -4,4 +4,5 @@ tildeathc_add_test(TARGET_NAME tokenize_basic_test TEST_NAME TokenizeBasicTest S
 tildeathc_add_test(TARGET_NAME tokenize_bad_input_crash TEST_NAME TokenizeBadInputCrash SOURCE_FILE bad_input_crash.c DEPENDENCIES tokenize_shared REGEX "malformed character data")
 tildeathc_add_test(TARGET_NAME tokenize_comment_test TEST_NAME TokenizeCommentTest SOURCE_FILE comment_test.c DEPENDENCIES tokenize_shared)
 tildeathc_add_test(TARGET_NAME tokenize_quote_test TEST_NAME TokenizeQuoteTest SOURCE_FILE quote_test.c DEPENDENCIES tokenize_shared)
+tildeathc_add_test(TARGET_NAME tokenize_quote_escapes TEST_NAME TokenizeQuoteEscapes SOURCE_FILE quote_escapes.c DEPENDENCIES tokenize_shared)
 tildeathc_add_test(TARGET_NAME tokenize_quote_error TEST_NAME TokenizeQuoteError SOURCE_FILE quote_error.c DEPENDENCIES tokenize_shared REGEX "unterminated string on line 1")

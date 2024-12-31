@@ -19,7 +19,7 @@ int main(void) {
 											{.type=IL_OP_NODE, .val.op=IL_JMP_OP, .id=14, .lineno=5, .num_children=1, .children=(struct il_node[]) {
 												{.type=IL_TAR_NODE, .val.tar=9, .id=15, .lineno=5, .num_children=0, .children=NULL}}}}},
 										{.type=IL_OP_NODE, .val.op=IL_OUT_OP, .id=16, .lineno=5, .num_children=1, .children=(struct il_node[]) {
-											{.type=IL_STR_NODE,.val.str="Bifurcation successful", .id=17, .lineno=4, .num_children=0,.children=NULL}}}}}}},
+											{.type=IL_STR_NODE,.val.str="Bifurcation successful\n", .id=17, .lineno=4, .num_children=0,.children=NULL}}}}}}},
 								{.type=IL_OP_NODE, .val.op=IL_DIE_OP, .id=17, .lineno=3, .num_children=1, .children=(struct il_node[]) {
 									{.type=IL_VAR_NODE, .val.str="THIS", .id=18, .lineno=3, .num_children=0, .children=NULL}}}}};
 

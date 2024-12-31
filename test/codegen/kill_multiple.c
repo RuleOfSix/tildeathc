@@ -35,7 +35,7 @@ int main(void) {
 											{.type=IL_OP_NODE, .val.op=IL_JMP_OP, .id=30, .lineno=13, .num_children=1, .children=(struct il_node[]) {
 												{.type=IL_TAR_NODE, .val.tar=25, .id=31, .lineno=13, .num_children=0, .children=NULL}}}}},
 										{.type=IL_OP_NODE, .val.op=IL_OUT_OP, .id=32, .lineno=13, .num_children=1, .children=(struct il_node[]) {
-											{.type=IL_STR_NODE, .val.str="Nailed it", .id=33, .lineno=13, .num_children=0, .children=NULL}}}}}}},
+											{.type=IL_STR_NODE, .val.str="Nailed it\n", .id=33, .lineno=13, .num_children=0, .children=NULL}}}}}}},
 								{.type=IL_OP_NODE, .val.op=IL_DIE_OP, .id=34, .lineno=15, .num_children=1, .children=(struct il_node[]) {
 									{.type=IL_VAR_NODE, .val.str="THIS", .id=35, .lineno=15, .num_children=0, .children=NULL}}}}};
 
