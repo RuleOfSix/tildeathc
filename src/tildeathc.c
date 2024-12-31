@@ -12,9 +12,10 @@
 #include<unistd.h>
 #include<getopt.h>
 #include<errno.h>
+#include<sys/wait.h>
 
 int32_t main(int32_t argc, char* argv[]) {
-	const char* usage_str = "Usage: tildeathc [-S] [-e] [-h] [-v] [-o output_file] [-I include_directory] input_file";
+	const char* usage_str = "Usage: tildeathc [-S] [-e] [-r] [-h] [-v] [-o output_file] [-I include_directory] input_file";
 	if (argc == 1) {
 		printf("%s\n", usage_str);
 		exit(EXIT_FAILURE);
@@ -26,14 +27,32 @@ int32_t main(int32_t argc, char* argv[]) {
 	append_to_strarray(&include_dirs, TILDEATH_LIB_INSTALL_DIR, true);
 	bool output_asm = false;
 	bool echo_output = false;
+	bool run = false;
 	opterr = 0;
-	for (char opt = getopt(argc, argv, "SI:eo:hv"); opt != -1; opt = getopt(argc, argv, "SI:eo:hv")) {
+	for (char opt = getopt(argc, argv, "SI:ero:hv"); opt != -1; opt = getopt(argc, argv, "SI:ero:hv")) {
 		switch (opt) {
 			case 'S':
 				output_asm = true;
 				break;
 			case 'e':
 				echo_output = true;
+				break;
+			case 'r':
+				output_filename = util_strdup("/tmp/tildeathc_XXXXXX");
+
+				errno = 0;
+				int unused_fd = mkstemp(output_filename);
+				if (unused_fd == -1) {
+					fprintf(stderr, "Temporary file %s creation failed: %s\n", output_filename, strerror(errno));
+					exit(EXIT_FAILURE);
+				}
+
+				errno = 0;
+				if (close(unused_fd) == -1) {
+					fprintf(stderr, "Warning: Failed to close unused file descripter for %s: %s\n", output_filename, strerror(errno));
+				}
+
+				run = true;
 				break;
 			case 'o':
 				output_filename = optarg;
@@ -48,7 +67,8 @@ int32_t main(int32_t argc, char* argv[]) {
 				printf("%s\n", usage_str);
 				printf("Options:\n\n");
 				printf("\t-S\t\t\tOutput assembly code instead of an executable binary\n");
-				printf("\t-e\t\t\tEcho output to stdout instead of writing to a file (only usable with -S, ignores -o)\n");
+				printf("\t-e\t\t\tEcho asm to stdout instead of writing to a file (implies -S, ignores -o)\n");
+				printf("\t-r\t\t\tRun program immediately without producing an output file. Ignores -S, -e, and -o.\n");
 				printf("\t-h\t\t\tDisplay help message and exit\n");
 				printf("\t-v\t\t\tDisplay version information and exit\n");
 				printf("\t-o output_file\t\tPath to file where output binary should be written (default: a.out)\n");
@@ -70,9 +90,8 @@ int32_t main(int32_t argc, char* argv[]) {
 		output_filename = output_asm ? default_asm_output_filename : default_output_filename;
 	}
 
-	if (echo_output && !output_asm) {
-		fprintf(stderr, "Error: -e option cannot be used with machine code output; please use it with -S instead.\n");
-		exit(EXIT_FAILURE);
+	if (echo_output) {
+		output_asm = true;
 	}
 	if (optind < argc - 1) {
 		for (int i = optind + 1; i < argc; i++) {
@@ -106,7 +125,7 @@ int32_t main(int32_t argc, char* argv[]) {
 
 	FILE* asm_file = stdout;
 	char asm_filename[] = "/tmp/tildeathc_XXXXXX.s";
-	if (!echo_output) {
+	if (!echo_output || run) {
 		errno = 0;
 		if (!output_asm) {
 			int asm_file_d = mkstemps(asm_filename, 2);
@@ -127,7 +146,7 @@ int32_t main(int32_t argc, char* argv[]) {
 
 	generate_assembly(il_tree, input_filename, asm_file);
 	
-	if (output_asm) {
+	if (output_asm && !run) {
 		if (asm_file != stdout) {
 			fclose(asm_file);
 		}
@@ -143,14 +162,88 @@ int32_t main(int32_t argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	
-	execlp("gcc", "gcc", asm_filename, "-L" RUNTIME_LIB_DIR, "-L" SRC_LIB_DIR, "-lobjects", "-lutil", "-o", output_filename, (char*) NULL);
-	if (errno == 0) { 
-		fprintf(stderr, "Internal Error: execlp failed trying to execute gcc\n");
-	} else {
-		perror("Internal execlp error trying to execute gcc");
+	errno = 0;
+	int32_t pid = fork();
+
+	if (pid < 0) {
+		perror("Error attempting to fork process");
+		exit(EXIT_FAILURE);
+	}
+	if (pid == 0) {
+		errno = 0;
+		execlp("gcc", "gcc", asm_filename, "-L" RUNTIME_LIB_DIR, "-L" SRC_LIB_DIR, "-lobjects", "-lutil", "-o", output_filename, (char*) NULL);
+		if (errno == 0) { 
+			fprintf(stderr, "Internal Error: execlp failed trying to execute gcc\n");
+		} else {
+			perror("Internal execlp error trying to execute gcc");
+		}
+		unlink(asm_filename);
+		unlink(output_filename);
+		if (run) {
+			free(output_filename);
+		}
+		exit(EXIT_FAILURE); 
+	}
+
+	int status = 0;
+	errno = 0;
+	if (waitpid(pid, &status, 0) != pid) {
+		if (errno == 0) {
+			fprintf(stderr, "Unknown waitpid error.\n");
+		} else {
+			perror("Waitpid error");
+		}
+		unlink(asm_filename);
+		unlink(output_filename);
+		if (run) {
+			free(output_filename);
+		}
+		exit(EXIT_FAILURE);
+	}
+	if (status != 0) {
+		fprintf(stderr, "Error: gcc exited with status code %d\n", status);
+		fprintf(stderr, "Assembly file stored at %s for inspection.\n", asm_filename);
+		unlink(output_filename);
+		if (run) {
+			unlink(output_filename);
+		}
+		exit(EXIT_FAILURE);
+	}
+
+	int32_t exit_code = EXIT_SUCCESS;
+	if (run) {
+		errno = 0;
+		int32_t pid = fork();
+		if (pid < 0) {
+			perror("Error attempting to fork process");
+			exit(EXIT_FAILURE);
+		} 
+		if (pid == 0) {
+			execlp(output_filename, output_filename, (char*) NULL);
+			if (errno == 0) {
+				fprintf(stderr, "Internal error: execlp failed trying to execute generated binary\n");
+			} else {
+				perror("Internal execlp error trying to execute generated binary");
+			}
+			unlink(asm_filename);
+			unlink(output_filename);
+			free(output_filename);
+			exit(EXIT_FAILURE);
+		}
+
+		int status = 0;
+		errno = 0;
+		if (waitpid(pid, &status, 0) != pid) {
+			if (errno == 0) {
+				fprintf(stderr, "tildeathc: unknown waitpid error.\n");
+			} else {
+				perror("tildeathc waitpid error");
+			}
+			exit_code = EXIT_FAILURE;
+		}
+		free(output_filename);
 	}
 	unlink(asm_filename);
 	unlink(output_filename);
-	exit(EXIT_FAILURE);
-
+	exit(exit_code);
 }
