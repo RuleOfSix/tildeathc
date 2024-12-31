@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(tildeathc VERSION 0.1
+project(tildeathc VERSION 1.0.0
 		          DESCRIPTION "Implementation of RuleOfSix's version of ~ATH as a compiler in C."
 				  LANGUAGES C)
 
