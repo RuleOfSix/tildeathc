@@ -4,6 +4,6 @@ bifurcate N7[NUM, NUL];
 ~ATH(LAMB) {
 	bifurcate NUM[NUM2, NUL];
 	LAMB.DIE();
-} EXECUTE(PRINT "DEC";);
+} EXECUTE(PRINT "DEC");
 [NUM2, NUM].DIE();
 THIS.DIE();

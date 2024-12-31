@@ -379,9 +379,6 @@ int64_t print(struct ast* parent, const struct token_list* tokens, int64_t start
 	cur_token++;
 	ASSERT_TOKEN_IN_BOUNDS(cur_token, tokens);
 
-	ASSERT_TOKEN_MATCH(tokens->tokens[cur_token].str, ";", tokens->tokens[cur_token].lineno);
-	cur_token++;
-
 	return cur_token - start_token;
 }
 

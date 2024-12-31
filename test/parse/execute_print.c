@@ -21,7 +21,6 @@ int32_t main(void) {
 		{"(", 1},
 		{"PRINT", 1},
 		{"\"Hello, World\"", 1},
-		{";", 1},
 		{")", 1},
 		{";", 1},
 		{"THIS", 2},
@@ -30,7 +29,7 @@ int32_t main(void) {
 		{")", 2},
 		{";", 2}
 	};
-	struct token_list input = {input_tokens, 18};
+	struct token_list input = {input_tokens, 17};
 
 	struct ast expected_output = {.type=ROOT_NODE, .val.str=NULL, .lineno=0, .num_children=2, .children=(struct ast[]) {
 									{.type=OPERATION_NODE, .val.op=LOOP_OP, .lineno=1, .num_children=2, .children=(struct ast[]) {
