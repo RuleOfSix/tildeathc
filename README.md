@@ -26,9 +26,9 @@ Abstract objects are the default, basic RoS ~ATH object, and what is used for th
 
 Universe objects are alive, cannot be killed, and do not have left or right halves (in other words, they cannot be bifurcated).  
 
-Input objects are used to take in input from users on the command line: when an input object is imported, the user will be prompted for input. This input can ONLY take the form of a string of 0 and 1 characters (eg. the text "011101" is valid input, but "hello" will cause a runtime error). This "binary" input is bound to the newly-created input object, and can be "read out" via successive bifurcation. 
+Input objects are used to take in input from users on the command line: when an input object is imported, the user will be prompted for input. This input can ONLY take the form of a string of 0 and 1 characters (eg. the text "011101" is valid input, but "hello" will cause a runtime error). This "binary" input is bound to the newly-created input object, and can be "read out" via successive bifurcation. The left half of any given input object is alive if the first character of the input is 1, and dead if it is 0. The right half is another input object that represents all but the first character of the text input, and will be dead if it doesnt contain at least one character. This allows the parsing of binary input from the user.
 
-Library import statements don't create objects, they effectively insert another ~ATH file in their own place. The name used for the import is the filename the compiler will search for to insert, but without the file extension: for instance, `import library NUMBERS256` will cause the compiler to insert the contents of NUMBERS256.~ATH into the file at that location. The only real utility of importing a library is to have your program come pre-loaded with certain objects already created. The NUMBERS256.~ATH library that is installed alongside the compiler is an example of the utility of this: it creates for you references to 256 objects, each the left half of the next, named N256 to N0. Only N0 is dead. This is a very simplistic way to encode numbers in RoS ~ATH (and also how numbers are encoded in drocta ~ATH), but writing out the about 260 lines of code to create these objects at the top of every program where you want to use numbers would be a chore.
+Library import statements don't create objects, they effectively insert another ~ATH file in their own place. The name used for the import is the filename the compiler will search for to insert, but without the file extension: for instance, `import library NUMBERS256` will cause the compiler to insert the contents of NUMBERS256.~ATH into the file at that location. Libraries can only be imported at the beginning of a program (before non-import graves) and cannot contain input imports or PRINT statements; thus, the only real utility of importing a library is to have your program come pre-loaded with certain objects already created. The NUMBERS256.~ATH library that is installed alongside the compiler is an example of the utility of this: it creates for you references to 256 objects, each the left half of the next, named N256 to N0. Only N0 is dead. This is a very simplistic way to encode numbers in RoS ~ATH (and also how numbers are encoded in drocta ~ATH), but writing out the about 260 lines of code to create these objects at the top of every program where you want to use numbers would be a chore.
 
 ## Loops
 Loops are structured like this:
@@ -47,7 +47,7 @@ For example, to print the string "Hello, world!" once the variable LAMB is dead,
     # Additional graves...
 } EXECUTE(PRINT "Hello, world!");
 ```
-Of course, if there's nothing within the main loop body that would cause LAMB to be dead, then it will loop forever and "Hello, world!" will never be printed. Also, notice that print statements don't need semicolons. This is also true for the NULL keyword, but **graves need semicolons even when inside an EXECUTE.** 
+Of course, if there's nothing within the main loop body that would cause LAMB to be dead, then it will loop forever and "Hello, world!" will never be printed. The \# symbol is used for comments in RoS ~ATH, contrary to the // comments shown in Homestuck (this is done mostly for the purpose of enabling shebang scripts). Also, notice that print statements don't need semicolons. This is also true for the NULL keyword, but **everything else needs semicolons even when inside an EXECUTE.** 
 
 ## Deaths
 Deaths are a grave that allow us to actually have loops terminate at some point such that we can actually do something. This is a big departure from Homestuck's ~ATH but I think you will like it. Deaths are either written as
@@ -105,7 +105,7 @@ THIS.DIE();
 The above code will loop 10 times and then print "Done!". 
 
 ## Functions/Code Re-Use
-There is none. There's not any syntax suggested for this in Homestuck, and ~ATH is pretty much designed to be an unusable nightmare, so I've kept that spirit. I may add some form of functions (called "graveyards") as a future optional compiler flag, but I'm undecided.
+There are no functions in RoS ~ATH. There's not any syntax suggested for this in Homestuck, and ~ATH is pretty much designed to be an unusable nightmare, so I've tried to keep that spirit, with the only form of code reuse being via importing libraries. I may add some form of functions (called "graveyards") as a future optional compiler feature, but I'm undecided.
 
 # Installation
 You'll need gcc and glibc both to compile tildeathc, and also to compile and run tildeathc programs (although tildeathc will use them behind-the-scenes for you; they just need to be installed). You also need to be using amd64/x86_64 Linux: anything else and tildeathc will not be able to produce working code for your device. I have yet to test it on WSL. With that out of the way, it's as simple as 
