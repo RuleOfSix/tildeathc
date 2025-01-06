@@ -1,18 +1,24 @@
-#include<project_info.h>
-#include<tokenize.h>
-#include<parse.h>
-#include<il.h>
-#include<validate_il.h>
-#include<codegen.h>
-#include<nullcheck.h>
-#include<util.h>
-#include<stdio.h>
-#include<stdint.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<getopt.h>
-#include<errno.h>
-#include<sys/wait.h>
+#include <project_info.h>
+#include <tokenize.h>
+#include <parse.h>
+#include <il.h>
+#include <validate_il.h>
+#include <codegen.h>
+#include <nullcheck.h>
+#include <util.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <getopt.h>
+#include <errno.h>
+#include <signal.h>
+#include <sys/wait.h>
+
+char* asm_filename = NULL;
+char* output_filename = NULL;
+void unlink_asmfile();
+void unlink_outfile();
 
 int32_t main(int32_t argc, char* argv[]) {
 	const char* usage_str = "Usage: tildeathc [-S] [-e] [-r] [-h] [-v] [-o output_file] [-I include_directory] input_file";
@@ -20,7 +26,8 @@ int32_t main(int32_t argc, char* argv[]) {
 		printf("%s\n", usage_str);
 		exit(EXIT_FAILURE);
 	}
-	char* output_filename = NULL;
+	const char* tmpdir_env = secure_getenv("TMPDIR");
+	const char* tmpdir = tmpdir_env ? tmpdir_env : "/tmp";
 	char default_output_filename[] = "a.out";
 	char default_asm_output_filename[] = "a.s";
 	struct strarray include_dirs = {.len=0, .cap=0, .array=NULL};
@@ -38,7 +45,7 @@ int32_t main(int32_t argc, char* argv[]) {
 				echo_output = true;
 				break;
 			case 'r':
-				output_filename = util_strdup("/tmp/tildeathc_XXXXXX");
+				output_filename = util_strcat(util_strdup(tmpdir), "/tildeathc_XXXXXX");
 
 				errno = 0;
 				int unused_fd = mkstemp(output_filename);
@@ -97,10 +104,16 @@ int32_t main(int32_t argc, char* argv[]) {
 		for (int i = optind + 1; i < argc; i++) {
 			fprintf(stderr, "Error: unrecognized argument \"%s\"\n", argv[i]);
 		}
+		if (run) {
+			unlink(output_filename);
+		}
 		exit(EXIT_FAILURE);
 	}
 	if (optind > argc - 1) {
 		fprintf(stderr, "Error: missing input file argument.\n");
+		if (run) {
+			unlink(output_filename);
+		}
 		exit(EXIT_FAILURE);
 	}
 
@@ -108,7 +121,10 @@ int32_t main(int32_t argc, char* argv[]) {
 	errno = 0;
 	FILE* input_file = fopen(input_filename, "r");
 	if (input_file == NULL) {
-		perror("Error reading input file");
+		perror("tildeathc: error reading input file");
+		if (run) {
+			unlink(output_filename);
+		}
 		exit(EXIT_FAILURE);
 	}
 
@@ -120,17 +136,23 @@ int32_t main(int32_t argc, char* argv[]) {
 	free_ast(syntax_tree);
 	free(syntax_tree);
 	if (!validate_il(il_tree)) {
+		if (run) {
+			unlink(output_filename);
+		}
 		exit(EXIT_FAILURE);
 	}
 
 	FILE* asm_file = stdout;
-	char asm_filename[] = "/tmp/tildeathc_XXXXXX.s";
+	asm_filename = util_strcat(util_strdup(tmpdir), "/tildeathc_XXXXXX.s");
 	if (!echo_output || run) {
 		errno = 0;
 		if (!output_asm) {
 			int asm_file_d = mkstemps(asm_filename, 2);
 			if (asm_file_d == -1) {
-				perror("Error creating temporary file");
+				perror("tildeathc: error creating temporary file");
+				if (run) {
+					unlink(output_filename);
+				}
 				exit(EXIT_FAILURE);
 			}
 			errno = 0;
@@ -139,8 +161,15 @@ int32_t main(int32_t argc, char* argv[]) {
 			asm_file = fopen(output_filename, "w");
 		}
 	}
+
+	signal(SIGINT, unlink_asmfile);
+
 	if (asm_file == NULL) {
-		perror("Error opening temporary file");
+		perror("tildeathc: error opening temporary file");
+		if (run) {
+			unlink(output_filename);
+		}
+		unlink(asm_filename);
 		exit(EXIT_FAILURE);
 	}
 
@@ -155,95 +184,93 @@ int32_t main(int32_t argc, char* argv[]) {
 	fclose(asm_file);
 	
 	errno = 0;
-	FILE* output_file = fopen(output_filename, "w");
-	if (output_file == NULL) {
-		perror("Error creating output file");
-		unlink(asm_filename);
-		exit(EXIT_FAILURE);
-	}
-	
-	errno = 0;
 	int32_t pid = fork();
 
 	if (pid < 0) {
-		perror("Error attempting to fork process");
+		perror("tildeathc: error attempting to fork process");
+		unlink(asm_filename);
 		exit(EXIT_FAILURE);
 	}
 	if (pid == 0) {
 		errno = 0;
 		execlp("gcc", "gcc", asm_filename, "-L" RUNTIME_LIB_DIR, "-L" SRC_LIB_DIR, "-lobjects", "-lutil", "-o", output_filename, (char*) NULL);
 		if (errno == 0) { 
-			fprintf(stderr, "Internal Error: execlp failed trying to execute gcc\n");
+			fprintf(stderr, "tildeathc: failed to execute gcc: unknown error\n");
 		} else {
-			perror("Internal execlp error trying to execute gcc");
+			perror("tildeathc: failed to execute gcc");
 		}
 		unlink(asm_filename);
 		unlink(output_filename);
-		if (run) {
-			free(output_filename);
-		}
 		exit(EXIT_FAILURE); 
 	}
+
+	signal(SIGINT, unlink_outfile);
 
 	int status = 0;
 	errno = 0;
 	if (waitpid(pid, &status, 0) != pid) {
 		if (errno == 0) {
-			fprintf(stderr, "Unknown waitpid error.\n");
+			fprintf(stderr, "tildeathc: unknown error waiting for gcc\n");
 		} else {
-			perror("Waitpid error");
+			perror("tildeathc: error waiting for gcc");
 		}
 		unlink(asm_filename);
 		unlink(output_filename);
-		if (run) {
-			free(output_filename);
-		}
-		exit(EXIT_FAILURE);
-	}
-	if (status != 0) {
-		fprintf(stderr, "Error: gcc exited with status code %d\n", status);
-		fprintf(stderr, "Assembly file stored at %s for inspection.\n", asm_filename);
-		unlink(output_filename);
-		if (run) {
-			unlink(output_filename);
-		}
 		exit(EXIT_FAILURE);
 	}
 
-	int32_t exit_code = EXIT_SUCCESS;
-	if (run) {
-		errno = 0;
-		int32_t pid = fork();
-		if (pid < 0) {
-			perror("Error attempting to fork process");
-			exit(EXIT_FAILURE);
-		} 
-		if (pid == 0) {
-			execlp(output_filename, output_filename, (char*) NULL);
-			if (errno == 0) {
-				fprintf(stderr, "Internal error: execlp failed trying to execute generated binary\n");
-			} else {
-				perror("Internal execlp error trying to execute generated binary");
-			}
-			unlink(asm_filename);
-			unlink(output_filename);
-			free(output_filename);
-			exit(EXIT_FAILURE);
-		}
-
-		int status = 0;
-		errno = 0;
-		if (waitpid(pid, &status, 0) != pid) {
-			if (errno == 0) {
-				fprintf(stderr, "tildeathc: unknown waitpid error.\n");
-			} else {
-				perror("tildeathc waitpid error");
-			}
-			exit_code = EXIT_FAILURE;
-		}
-		free(output_filename);
-	}
 	unlink(asm_filename);
+	free(asm_filename);
+
+	if (status != 0) {
+		fprintf(stderr, "tildeathc: gcc exited with status code %d\n", status);
+		unlink(output_filename);
+		exit(EXIT_FAILURE);
+	}
+
+	if (!run) {
+		exit(EXIT_SUCCESS);
+	}
+
+	errno = 0;
+	pid = fork();
+	if (pid < 0) {
+		perror("tildeathc: error attempting to fork process");
+		unlink(output_filename);
+		exit(EXIT_FAILURE);
+	} 
+
+	if (pid == 0) {
+		execlp(output_filename, output_filename, (char*) NULL);
+		if (errno == 0) {
+			fprintf(stderr, "tildeathc: unknown error attempting to execute generated binary\n");
+		} else {
+			perror("tildeathc: error attempting to execute generated binary");
+		}
+		unlink(output_filename);
+		exit(EXIT_FAILURE);
+	}
+
+	status = 0;
+	errno = 0;
+	if (waitpid(pid, &status, 0) != pid) {
+		if (errno == 0) {
+			fprintf(stderr, "tildeathc: unknown waitpid error.\n");
+		} else {
+			perror("tildeathc waitpid error");
+		}
+		unlink(output_filename);
+		exit(EXIT_FAILURE);
+	}
+	free(output_filename);
 	unlink(output_filename);
-	exit(exit_code);
+	exit(EXIT_SUCCESS);
+}
+
+void unlink_asmfile() {
+	unlink(asm_filename);
+}
+
+void unlink_outfile() {
+	unlink(output_filename);
 }

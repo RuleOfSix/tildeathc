@@ -10,6 +10,7 @@ if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
 
+add_compile_options(-D_GNU_SOURCE)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 endif()
