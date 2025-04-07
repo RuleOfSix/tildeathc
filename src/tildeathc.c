@@ -119,7 +119,12 @@ int32_t main(int32_t argc, char* argv[]) {
 
 	char* input_filename = argv[optind];
 	errno = 0;
-	FILE* input_file = fopen(input_filename, "r");
+	FILE* input_file;
+	if (strcmp(input_filename, "-") == 0) {
+		input_file = stdin;
+	} else {
+		input_file = fopen(input_filename, "r");
+	}
 	if (input_file == NULL) {
 		perror("tildeathc: error reading input file");
 		if (run) {
